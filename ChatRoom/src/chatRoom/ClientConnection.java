@@ -1,0 +1,410 @@
+package chatRoom;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
+import org.json.simple.JSONObject;
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+public class  ClientConnection extends Thread {
+
+	private Socket clientSocket;
+	private BufferedReader reader;
+	private BufferedWriter writer;
+	//This queue holds messages sent by the client or messages intended for the client from other threads
+	private BlockingQueue<Message> messageQueue;
+	private String currentServerId;
+	JSONObject msgJObj = null;
+	String identity = null;
+	String chatRoom = null;
+	String roomId = null;
+	
+	
+	JsonParser parser = new JsonParser();
+
+	public ClientConnection(Socket clientSocket, String currentServerId) {
+		try {
+			this.clientSocket = clientSocket;
+			reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), "UTF-8"));
+			writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), "UTF-8"));	
+			messageQueue = new LinkedBlockingQueue<Message>();
+			this.currentServerId = currentServerId;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public void run() {
+		
+		try {
+			
+			ClientMessageReader messageReader = new ClientMessageReader(reader, messageQueue);
+			messageReader.setName(this.getName() + "Reader");
+			messageReader.start();
+			
+			System.out.println(Thread.currentThread().getName() 
+					+ " - Processing client " + currentServerId + "  messages");
+			
+			
+			//Monitor the queue to process any incoming messages (consumer)
+			while(true) {
+				
+				Message msg = messageQueue.take();
+				 msgJObj = new JSONObject();
+				 msgJObj = msg.getMessage();
+				
+				if(!msg.isFromClient() && msg.getMessage().equals("exit")) {
+					Iterator<UserInfo> iter = Server.listOfusers.iterator();
+					while (iter.hasNext()) {
+					    UserInfo str = iter.next();
+					    if(str.username.equals(this.identity))
+					        iter.remove();
+					}
+					break;
+				}
+				
+				if(msg.isFromClient()) {
+				
+			    	String s = (String) msgJObj.get("type");
+			    	
+					if(s.equals("newidentity")){
+						
+			    		identity = (String)msgJObj.get("identity");
+			    	
+			    		chatRoom = "MainHall-"+ currentServerId;
+			    		
+			    		JSONObject approved = MessageHandler.newIdnetityClass(identity, chatRoom, currentServerId);
+			    		Message msgIdApproved = new Message(false,approved);
+						messageQueue.add(msgIdApproved);
+						
+						String idApproval = (String) approved.get("approved");
+					
+						List<ClientConnection> connectedClients = ServerState.getInstance().getConnectedClients();
+						
+						if (idApproval.equals("true")){
+							
+							JSONObject changeRoom = MessageHandler.changeRoomClass(identity,chatRoom,"");
+				    		Message msgChangeRoom =new Message(false,changeRoom);
+				    		//messageQueue.add(msgChangeRoom);
+				    		
+				    		connectedClients = ServerState.getInstance().getConnectedClients();
+				    		for(ClientConnection client : connectedClients){
+				    			if(client.chatRoom.equals(this.chatRoom)){
+				    				client.getMessageQueue().add(msgChangeRoom);
+				    			}
+				    		}
+							
+				    		UserInfo username = new UserInfo();
+							username.username = identity;
+							username.chatroom = chatRoom;
+							Server.listOfusers.add(username);
+				    		
+						
+						}
+						
+						
+						MessageHandler.releaseIdentity(identity,currentServerId);
+					
+					}
+			    	
+					if(s.equals("createroom")){
+			    		String tempChatRoom = (String) msgJObj.get("roomid");
+			    		String formerRoom = this.chatRoom;
+			    		JSONObject createroom = MessageHandler.createRoom(this.identity , tempChatRoom,currentServerId);
+			    		Message msgCreateRoom = new Message (false,createroom);
+			    		messageQueue.add(msgCreateRoom);
+			    		String approval = (String) createroom.get("approved");
+			    		
+			    		if(((String)createroom.get("approved")).equals("true")){
+			    			
+			    			chatRoom = tempChatRoom;
+			    			chatRoomInfo room = new chatRoomInfo();
+			    			room.chatRoomId =chatRoom;
+			    			room.owner = identity;
+			    			room.serverId = currentServerId;
+			    			Server.listOfrooms.add(room);
+				    		JSONObject changeRoom1 = MessageHandler.changeRoomClass(this.identity,chatRoom,"");
+				    		Message msgChangeRoom1 =new Message(false,changeRoom1);
+				    		messageQueue.add(msgChangeRoom1);
+				    		
+				    		List<ClientConnection> connectedClients = ServerState.getInstance().getConnectedClients();
+				    		for(ClientConnection client : connectedClients){
+				    			if((client.chatRoom.equals(formerRoom))&&!(client.identity.equals(this.identity))){
+				    				client.getMessageQueue().add(msgChangeRoom1);
+				    			}
+				    		}
+				    		
+			    		}
+			    		
+			    		MessageHandler.releaseRoom(chatRoom,currentServerId,approval);
+			    		
+					}	
+					
+					
+		    		if(s.equals("message")){
+			    		
+			    		JSONObject newMessage = new JSONObject();
+			    		String content = (String)msgJObj.get("content");
+			    		
+			    		newMessage.put("type","message");
+			    		newMessage.put("identity",this.identity);
+			    		newMessage.put("content",content);
+			    	
+			    		msg = new Message(false, newMessage);
+			    		
+			    		List<ClientConnection> connectedClients = ServerState.getInstance().getConnectedClients();
+						for(ClientConnection client : connectedClients) {
+							//Place the message on the client's queue
+							if(client.chatRoom.equals(this.chatRoom) && (!client.equals(this))){
+								
+								client.getMessageQueue().add(msg);
+							}
+							
+						}
+						
+		    		}
+			    
+		    		
+		    		if(s.equals("list")){
+			    		JSONObject list = MessageHandler.list();
+			    		msg = new Message (false,list);
+			    	
+			    		messageQueue.add(msg);
+			    	
+		    		}	
+			    	
+			    	if(s.equals("join")){	 
+			    		String newChatRoom = (String)msgJObj.get("roomid");
+			    		JSONObject joinRoom = MessageHandler.joinRoom(identity,chatRoom,newChatRoom,currentServerId);
+			    		JSONObject changeRoom = MessageHandler.changeRoomClass(identity, newChatRoom, chatRoom);
+			    		Message changeRoomMsg = new Message(false,changeRoom);
+			    		msg = new Message (false,joinRoom);
+			    		
+			    		List<ClientConnection> connectedClients = ServerState.getInstance().getConnectedClients();
+			    		for(ClientConnection client : connectedClients){
+			    			if((client.chatRoom.equals(this.chatRoom)) && !(client.identity.equals(this.identity))){
+			    				client.getMessageQueue().add(changeRoomMsg);
+			    			}
+			    		}
+			    		
+			    		String roomid = (String) joinRoom.get("roomid");
+			    		chatRoom = roomid;
+			    	
+			    		messageQueue.add(msg);
+			    		connectedClients = ServerState.getInstance().getConnectedClients();
+			    		for(ClientConnection client : connectedClients){
+			    			if(client.chatRoom.equals(this.chatRoom)){
+			    				client.getMessageQueue().add(msg);
+			    			}
+			    		}
+			    		
+				    	if(joinRoom.get("type").equals("route")){
+				    		Iterator<UserInfo> iter = Server.listOfusers.iterator();
+							while (iter.hasNext()) {
+							    UserInfo str = iter.next();
+							    if(str.username.equals(this.identity))
+							        iter.remove();
+							}
+							ServerState.getInstance().clientDisconnected(this);
+							
+				    	}
+				    	
+				    	
+			    	}
+			    	
+		    		if(s.equals("who")){
+			    		JSONObject who = MessageHandler.who(chatRoom);
+			    		msg = new Message(false,who);
+			    		messageQueue.add(msg);
+			    	
+		    		}
+			    	
+		    		
+		    		if(s.equals("movejoin")){
+		    			
+			    		identity = (String) msgJObj.get("identity");
+			    		String newChatRoom = (String)msgJObj.get("roomid");
+			    		String formerRoom = (String) msgJObj.get("former");
+			    		JSONObject moveJoin = MessageHandler.moveJoin(identity, newChatRoom,formerRoom , currentServerId);
+			    		msg = new Message (false,moveJoin);
+			    		String chatRoom = null;
+			    		messageQueue.add(msg);
+			    		
+			    		
+			    		for(UserInfo user : Server.listOfusers){
+			    			if (user.username.equals(identity)){
+			    				this.chatRoom = user.chatroom;
+			    				
+			    			}
+			    		}
+			    		
+			    		JSONObject changRoom = MessageHandler.changeRoomClass(identity, this.chatRoom, formerRoom);
+			    		msg = new Message(false,changRoom);
+			    		
+			    		
+			    		List<ClientConnection> connectedClients = ServerState.getInstance().getConnectedClients();
+			    		for (ClientConnection client : connectedClients){
+			    			if (client.chatRoom.equals(this.chatRoom)){
+			    				client.getMessageQueue().add(msg);
+			    			}
+			    			
+			    		}
+			    	
+		    		}
+			    	
+		    		if(s.equals("deleteroom")){
+		    			
+			    		String roomid = (String) msgJObj.get("roomid");
+			    		JSONObject deleteRoom = MessageHandler.deleteRoom(identity,roomid,currentServerId);
+			    		Message msgChangeRoom = new Message(true,null);
+			    		if(deleteRoom.get("approved").equals("true")){
+			    	
+			    			List<ClientConnection> connectedClients = ServerState.getInstance().getConnectedClients();
+							boolean sent = true;
+				    		for(ClientConnection client : connectedClients) {
+								
+								System.out.println("Loop" + client.chatRoom);
+								if(client.chatRoom.equals(roomid) ){
+									client.chatRoom = "MainHall-"+currentServerId;
+					    		    JSONObject changeRoom = MessageHandler.changeRoomClass(client.identity,chatRoom,"");
+						    	    msgChangeRoom =new Message(false,changeRoom);
+								
+									sent = false;
+									
+								}	
+								
+								if(!sent){
+									for(ClientConnection clientB : connectedClients){
+										if ((clientB.chatRoom.equals("MainHall-"+currentServerId))){
+											clientB.getMessageQueue().add(msgChangeRoom);
+											sent = true;
+										}
+									}
+								}	
+							}
+				    		Iterator<chatRoomInfo> iter = Server.listOfrooms.iterator();
+							while (iter.hasNext()) {
+							    chatRoomInfo str = iter.next();
+							    if(str.chatRoomId.equals(roomid))
+							        iter.remove();
+							}
+			    		}
+			    		
+			    		msg = new Message(false,deleteRoom);
+			    		messageQueue.add(msg);
+			    	    
+			    }
+		    	
+	    		if(s.equals("quit")){
+	    			boolean found = false;
+	    			String chatRoom = null;
+	    			for(chatRoomInfo room :Server.listOfrooms){
+	    				
+	    				if(this.identity.equals(room.owner)){
+	    					found = true;
+	    					chatRoom = room.chatRoomId;
+	    				}
+	    			}
+	    			
+	    			if (found){
+	    					JSONObject deleteRoom = MessageHandler.deleteRoom(this.identity,chatRoom, currentServerId);
+				    	   
+				    			List<ClientConnection> connectedClients = ServerState.getInstance().getConnectedClients();
+								boolean sent = true;
+					    		for(ClientConnection client : connectedClients) {
+									
+									if(client.chatRoom.equals(this.chatRoom)&&!(client.identity.equals(this.identity)) ){
+										client.chatRoom = "MainHall-"+currentServerId;
+						    		    JSONObject changeRoom = MessageHandler.changeRoomClass(client.identity,client.chatRoom,"");
+							    	    msg =new Message(false,changeRoom);
+									
+										sent = false;
+										
+									}	
+									
+									if(!sent){
+										for(ClientConnection clientB : connectedClients){
+											if ((clientB.chatRoom.equals("MainHall-"+currentServerId))){
+												clientB.getMessageQueue().add(msg);
+												sent = true;
+											}
+										}
+									}	
+								}
+					    		
+					    		Iterator<chatRoomInfo> iter = Server.listOfrooms.iterator();
+								while (iter.hasNext()) {
+								    chatRoomInfo str1 = iter.next();
+								    if(str1.chatRoomId.equals(this.chatRoom))
+								        iter.remove();
+								}
+								
+								
+								msg =new Message(false,deleteRoom);
+						    	messageQueue.add(msg);
+						    	JSONObject changeRoom = MessageHandler.changeRoomClass(this.identity,"","");
+						    	msg = new Message(false,changeRoom);
+						    	messageQueue.add(msg);
+								ServerState.getInstance().DisconnectClient(this);
+	    			}else{
+	    				JSONObject changeRoom = MessageHandler.changeRoomClass(this.identity,"","");
+				    	msg = new Message(false,changeRoom);
+				    	messageQueue.add(msg);
+						ServerState.getInstance().DisconnectClient(this);
+	    			}
+				    
+	    			Iterator<UserInfo> itr = Server.listOfusers.iterator();
+					while (itr.hasNext()) {
+					    UserInfo str = itr.next();
+					    if(str.username.equals(identity))
+					        itr.remove();
+					}
+		    		
+	    		}
+		    	
+				} else {
+					
+					write(msg.getMessage().toJSONString()+"\n");
+				}
+			}
+			
+			clientSocket.close();
+			ServerState.getInstance().clientDisconnected(this);
+			System.out.println(Thread.currentThread().getName() 
+					+ " - Client " +" disconnected");
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
+
+	public BlockingQueue<Message> getMessageQueue() {
+		return messageQueue;
+	}
+
+	public void write(String msg) {
+		try {
+			writer.write(msg);
+			writer.flush();
+			System.out.println(Thread.currentThread().getName() + " - Message sent to client " );
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+}

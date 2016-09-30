@@ -81,6 +81,12 @@ public class  ClientConnection extends Thread {
 				
 			    	String s = (String) msgJObj.get("type");
 			    	
+			    	if (s.equals("login")){
+						String username = (String) msgJObj.get("username");
+						String password = (String) msgJObj.get("password");
+						JSONObject authenticated =MessageHandler.login(username,password);
+					}
+			    	
 					if(s.equals("newidentity")){
 						
 			    		identity = (String)msgJObj.get("identity");

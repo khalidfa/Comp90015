@@ -36,8 +36,7 @@ public class ClientMessageReader extends Thread {
 				System.out.println("Message: " + msg.getMessage());
 				messageQueue.add(msg);
 			}
-			
-			
+			reader.close();
 			//If the end of the stream was reached, the client closed the connection
 			//Put the exit message in the queue to allow the client connection thread to 
 			//close the socket
@@ -45,7 +44,7 @@ public class ClientMessageReader extends Thread {
 			exitMessage.put("type", "exit");
 			Message exit = new Message(false, exitMessage);
 			messageQueue.add(exit);
-			reader.close();
+			
 		} catch (SocketException e) {
 			//In some platforms like windows, when the end of stream is reached, instead
 			//of returning null, the readLine method throws a SocketException, so 

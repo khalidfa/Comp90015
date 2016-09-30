@@ -60,6 +60,7 @@ public class ServerConnection extends Thread {
 				String s = (String) msgJObj.get("type");
 				JSONObject lockIdentity = new JSONObject();
 			
+				
 				if(s.equals("lockidentity")){	
 					userIdentity= (String) msgJObj.get("identity");
 					

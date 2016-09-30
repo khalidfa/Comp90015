@@ -6,11 +6,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLServerSocketFactory;
-import javax.net.ssl.SSLSocket;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -48,10 +43,7 @@ public class Server {
 		
 		String currentServerId= null;
 	    String configFile= null;
-	   // String keyfile = "/Users/Khalid/Desktop/comp90015/keystore.jks";
-	    //System.setProperty("javax.net.ssl.keyStore",keyfile);
-	    //System.setProperty("javax.net.ssl.keyStorePassword","changeit");
-	    //System.setProperty("javax.net.debug","all");
+		
 		System.out.println("reading command line options");
 		
 		Options options = new Options();
@@ -127,20 +119,13 @@ public class Server {
 	    		}
 	        	
 	        }
+
 			
-			
-			
-			//Accept client connection
-			
-			
-			//SSLServerSocket listeningSocket = null;
 			ServerSocket listeningSocket = null;
 			ServerSocket listeningServerSocket = null;
 			try {
 			
 				// Create a server socket listening on port 4444
-				//SSLServerSocketFactory sslserversocketfactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-				//listeningSocket = (SSLServerSocket)  sslserversocketfactory.createServerSocket(serverPort);
 				listeningSocket = new ServerSocket(serverPort);
 				System.out.println(Thread.currentThread().getName() + 
 						" - Server listening on port" + serverPort);
@@ -156,8 +141,6 @@ public class Server {
 					
 					
 					//Accept an incoming client connection request
-					//SSLSocket sslsocket = (SSLSocket) sslserversocket.accept();
-					//SSLSocket clientSocket = (SSLSocket)listeningSocket.accept();
 					Socket clientSocket = listeningSocket.accept();
 					System.out.println(Thread.currentThread().getName() 
 							+ " - Client conection accepted");

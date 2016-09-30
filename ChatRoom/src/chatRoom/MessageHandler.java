@@ -27,6 +27,58 @@ public class MessageHandler {
 	 private static BufferedReader reader;
 	 private static BufferedWriter writer;
 	 
+	 static JSONObject login(String username,String password) throws ParseException{
+		
+		 JSONObject Authentication = new JSONObject();
+		 Socket s;
+		 JSONParser parser = new JSONParser();
+		 String AuthApproval = "true";
+		 
+		 Authentication.put("type", "login");
+		 Authentication.put("username", username);
+		 
+		 for(ServerInfo server : Server.listOfservers){
+				if (!(server.getServerId().equals("AS"))){
+					
+					String hostName = server.getServerAddress();
+					int serverPort = server.getServersPort();
+				
+					try{
+						
+						s = new Socket(hostName, serverPort);
+						
+						DataOutputStream out =new DataOutputStream( s.getOutputStream());
+						DataInputStream in = new DataInputStream(s.getInputStream());
+						System.out.println("Sending data");
+						 
+						 out.write((Authentication.toJSONString() + "\n").getBytes("UTF-8"));
+						 out.flush();
+						 
+						 JSONObject message;
+						
+						 message = (JSONObject) parser.parse(in.readLine());
+						
+						 String authenticated = (String) message.get("approved");
+						 System.out.println(authenticated);
+						 
+						 if(authenticated.equals("false")){
+							  AuthApproval = "false";
+						 }
+					}catch (UnknownHostException e) {
+						 System.out.println("Socket:"+e.getMessage());
+						 }catch (EOFException e){
+						 System.out.println("EOF:"+e.getMessage());
+						 }catch (IOException e){
+						 System.out.println("readline:"+e.getMessage());
+						 }
+				}
+			
+		 }
+		 Authentication.put("authenticated", AuthApproval);
+		 
+		 return Authentication;
+	 }
+	 
 	 static JSONObject deleteRoom(String id, String roomId,String serverId){
 		 JSONObject dRoom = new JSONObject();
 		 JSONObject deleteRoomServers = new JSONObject();

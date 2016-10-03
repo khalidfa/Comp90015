@@ -33,12 +33,13 @@ public class MessageHandler {
 		 Socket s;
 		 JSONParser parser = new JSONParser();
 		 String AuthApproval = "true";
-		 
+		 String authenticated = null;
 		 Authentication.put("type", "login");
 		 Authentication.put("username", username);
+		 Authentication.put("password", password);
 		 
 		 for(ServerInfo server : Server.listOfservers){
-				if (!(server.getServerId().equals("AS"))){
+				if (server.getServerId().equals("AS")){
 					
 					String hostName = server.getServerAddress();
 					int serverPort = server.getServersPort();
@@ -57,9 +58,9 @@ public class MessageHandler {
 						 JSONObject message;
 						
 						 message = (JSONObject) parser.parse(in.readLine());
-						
-						 String authenticated = (String) message.get("approved");
-						 System.out.println(authenticated);
+						System.out.println("this is the message :" +message.toJSONString());
+						 authenticated = (String) message.get("approval");
+						 System.out.println("The username is there :" + authenticated);
 						 
 						 if(authenticated.equals("false")){
 							  AuthApproval = "false";
@@ -74,7 +75,7 @@ public class MessageHandler {
 				}
 			
 		 }
-		 Authentication.put("authenticated", AuthApproval);
+		 Authentication.put("authenticated", authenticated);
 		 
 		 return Authentication;
 	 }
@@ -102,7 +103,7 @@ public class MessageHandler {
 			 deleteRoomServers.put("roomid", roomId);
 			 
 			 for(ServerInfo server : Server.listOfservers){
-					if (!(server.getServerId().equals(serverId))){
+					if (!(server.getServerId().equals(serverId))&&!(server.getServerId().equals("AS"))){
 						
 						String hostName = server.getServerAddress();
 						int serverPort = server.getServersPort();
@@ -205,7 +206,7 @@ public class MessageHandler {
 			releaseRoom.put("approved", approval);
 			
 			for(ServerInfo server : Server.listOfservers){
-				if (!(server.getServerId().equals(currentServerId))){
+				if (!(server.getServerId().equals(currentServerId))&&!(server.getServerId().equals("AS"))){
 					
 					String hostName = server.getServerAddress();
 					int serverPort = server.getServersPort();
@@ -240,7 +241,7 @@ public class MessageHandler {
 		releaseIdnentity.put("identity", id);
 		
 		for(ServerInfo server : Server.listOfservers){
-			if (!(server.getServerId().equals(currentServerId))){
+			if (!(server.getServerId().equals(currentServerId))&&!(server.getServerId().equals("AS"))){
 				
 				String hostName = server.getServerAddress();
 				int serverPort = server.getServersPort();
@@ -306,13 +307,13 @@ public class MessageHandler {
 		boolean sFound = false;
 		String lockId = "true";
 			
-		if (identity.matches(("^[a-zA-Z]([a-zA-z0-9]){2,15}$"))){
+		if (identity.matches(("^[a-zA-Z]([a-zA-Z0-9]){2,15}$"))){
 		
         for(UserInfo user: Server.listOfusers){
     	    if (user.getUsername().equals(identity))
     	    {
     		    found =false;
-    	  
+    		    System.out.println("i found it ");
     	    }
         }
        
@@ -327,7 +328,7 @@ public class MessageHandler {
 			lockIdentity.put("identity", identity);
 			
 			for(ServerInfo server : Server.listOfservers){
-				if (!(server.getServerId().equals(currentServerId))){
+				if (!(server.getServerId().equals(currentServerId))&&!(server.getServerId().equals("AS"))){
 					
 					String hostName = server.getServerAddress();
 					int serverPort = server.getServersPort();
@@ -348,7 +349,7 @@ public class MessageHandler {
 						 message = (JSONObject) parser.parse(in.readLine());
 						
 						 String locked = (String) message.get("locked");
-						 System.out.println(locked);
+						 //System.out.println(locked);
 						 
 						 if(locked.equals("false")){
 							 sFound = true;
@@ -421,7 +422,7 @@ public class MessageHandler {
 				lockRoom.put("serverid", serverId);
 				lockRoom.put("roomid" , roomId);
 				for(ServerInfo server : Server.listOfservers){
-					if (!(server.getServerId().equals(serverId))){
+					if (!(server.getServerId().equals(serverId))&&!(server.getServerId().equals("AS"))){
 						
 						String hostName = server.getServerAddress();
 						int serverPort = server.getServersPort();

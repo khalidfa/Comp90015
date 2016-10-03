@@ -47,25 +47,45 @@ public class ServerConnection extends Thread {
 			msgJObj = new JSONObject();
 			String userIdentity = null;
 			String roomId = null;
-			boolean found = false;
+			
 			
 			
 			while(true) {
 				
 				Socket serverSocket = listeningServerSocket.accept();
+				
 				reader = new BufferedReader(new InputStreamReader(serverSocket.getInputStream(), "UTF-8"));
 				writer = new BufferedWriter(new OutputStreamWriter(serverSocket.getOutputStream(), "UTF-8"));
 				msgJObj = (JSONObject) parser.parse(reader.readLine());
 				
 				String s = (String) msgJObj.get("type");
 				JSONObject lockIdentity = new JSONObject();
-			
+				
+				if(s.equals("releaseusername")){
+					String username = (String)msgJObj.get("username");
+					for(LoginInfo login :Server.listOfAuthUsers){
+						if(login.loginUsername.equals(username)){
+							login.loggedin = false;
+						}
+					}
+				}
+				
+				if(s.equals("login")){
+					JSONObject AuthUser = new JSONObject();
+					String username = (String) msgJObj.get("username");
+					String password = (String) msgJObj.get("password");
+					
+					AuthUser = login(username,password);
+				
+					writer.write(AuthUser.toJSONString() + "\n");	
+					writer.flush();
+				}
 				
 				if(s.equals("lockidentity")){	
 					userIdentity= (String) msgJObj.get("identity");
 					
 					boolean foundInLockeIds = false;
-					
+					boolean found = false;
 					for(UserInfo user: Server.listOfusers){
 						if(userIdentity.equals(user.username)){
 							found = true;
@@ -125,7 +145,7 @@ public class ServerConnection extends Thread {
 				}
 				
 				if(s.equals("lockroomid")){
-				
+					boolean found = false;
 					roomId= (String) msgJObj.get("roomid");
 					JSONObject lockedRoomId = new JSONObject();
 					boolean foundInLockedRooms = false;
@@ -214,6 +234,26 @@ public class ServerConnection extends Thread {
 		
 	
 		
+	}
+	public synchronized JSONObject  login (String username,String password){
+		JSONObject AuthUser = new JSONObject();
+		String authApproval = "false";
+		
+		for(LoginInfo login : Server.listOfAuthUsers){
+			if(login.loginUsername.equals(username) && login.loginPassword.equals(password)&&!(login.loggedin)){
+				authApproval = "true";
+				login.loggedin=true;
+				System.out.println(login.loginUsername);
+				System.out.println(login.loginPassword);
+				break;
+			}
+			
+		}
+		AuthUser.put("type","login");
+		AuthUser.put("username",username);
+		AuthUser.put("password", password);
+		AuthUser.put("approval", authApproval);
+		return AuthUser;
 	}
 }
 

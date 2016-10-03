@@ -67,10 +67,14 @@ public class MessageReceiveThread implements Runnable {
 		// server reply of #newidentity
 		if (type.equals("login")){
 			authenticated = Boolean.parseBoolean((String) message.get("authenticated"));
+			System.out.println(authenticated);
 			if (!authenticated) {
-				System.out.println(state.getIdentity() + " worng user name or password");
+				System.out.println(state.getIdentity() + " wrong user name or password");
 				socket.close();
 				System.exit(1);
+			}else{
+				
+				messageSendThread.MessageSend(socket, "#newidentity " + state.getIdentity());
 			}
 			return;
 		}

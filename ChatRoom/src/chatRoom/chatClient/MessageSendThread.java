@@ -40,7 +40,7 @@ public class MessageSendThread implements Runnable {
 			JSONObject login =ClientMessages.getLogin(state.getUsername(), state.getPassword());
 			send(login);
 			
-			MessageSend(socket, "#newidentity " + state.getIdentity());
+			
 		} catch (IOException e1) {
 			e1.printStackTrace();
 			System.exit(1);

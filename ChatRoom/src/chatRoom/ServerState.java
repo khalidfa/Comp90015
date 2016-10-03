@@ -28,7 +28,7 @@ public class ServerState {
 		connectedClients.add(client);
 	}
 	
-	public synchronized void DisconnectClient(ClientConnection client){
+	public  void DisconnectClient(ClientConnection client){
 		
 		Iterator<ClientConnection> iter = connectedClients.iterator();
 		while (iter.hasNext()) {
@@ -36,7 +36,11 @@ public class ServerState {
 		    if(str.equals(client))
 		        iter.remove();
 		}
-		
+		if(connectedClients.isEmpty()){
+			System.out.println("inside ServerState is empty");
+		}else{
+			System.out.println("inside ServerState is not empty");
+		}
 	}
 	public synchronized void clientDisconnected(ClientConnection client) {
 		connectedClients.add(client);

@@ -1,6 +1,7 @@
 package chatRoom;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -29,8 +30,10 @@ public class Server {
 	static List<UserInfo> listOfusers;
 	static List<chatRoomInfo> listOfrooms;
 	static List<chatRoomInfo> listOfLockedRooms;
+	static List<LoginInfo> listOfAuthUsers;
 	
 	public Server() {
+		listOfAuthUsers = new ArrayList<LoginInfo>();
 		listOflockedIds = new ArrayList<UserInfo>();
 		listOfservers = new ArrayList<ServerInfo>();
 		listOfusers = new ArrayList<UserInfo>();
@@ -38,6 +41,7 @@ public class Server {
 		listOfLockedRooms = new ArrayList<chatRoomInfo>();
 		
 	}
+
 	
 	public static void main(String[] args) {
 		
@@ -97,16 +101,17 @@ public class Server {
 	        }
 	        
 	        for (ServerInfo server: listOfservers){
-				
-				chatRoomInfo room = new chatRoomInfo();
-				room.chatRoomId ="MainHall-"+ server.getServerId();
-				room.owner = "";
-				room.serverId = server.getServerId();
-				listOfrooms.add(room);
+				if (!(server.getServerId().equals("AS"))){
+					chatRoomInfo room = new chatRoomInfo();
+					room.chatRoomId ="MainHall-"+ server.getServerId();
+					room.owner = "";
+					room.serverId = server.getServerId();
+					listOfrooms.add(room);
+				}
 			}
 	        
 			}catch (Exception e){
-				System.out.println("configuration file is not found");
+				System.out.println("configuration file was not found");
 				e.printStackTrace();
 			}
 			
@@ -119,44 +124,71 @@ public class Server {
 	    		}
 	        	
 	        }
-
+			
+			if (currentServerId.equals("AS")){
+				File file = new File("loginFile.txt");
+				String path = file.getAbsolutePath();
+				 try {
+					System.out.println("reading Users's login information");
+					br = new BufferedReader(new InputStreamReader(new FileInputStream(path), "UTF-8"));
+					String line;
+					while ((line = br.readLine()) != null)
+					{   
+						String [] tokens = line.split("\\n");
+						
+						for (int i=0 ; i< tokens.length ; i++){
+							
+							String [] newTokens = line.split("\\t");
+							System.out.println(newTokens[0]);
+							System.out.println(newTokens[1]);
+								 LoginInfo login = new LoginInfo();
+								 login.loginUsername = newTokens[0];
+								 login.loginPassword = newTokens[1];
+								 listOfAuthUsers.add(login);
+						}
+					
+					}
+				} catch (NumberFormatException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
 			
 			ServerSocket listeningSocket = null;
 			ServerSocket listeningServerSocket = null;
 			try {
 			
-				// Create a server socket listening on port 4444
-				listeningSocket = new ServerSocket(serverPort);
-				System.out.println(Thread.currentThread().getName() + 
-						" - Server listening on port" + serverPort);
-				
 				listeningServerSocket = new ServerSocket(serverPort2);
 				System.out.println("Server is listenting on port " + serverPort2);
-				
 				ServerConnection serverConnection = new ServerConnection(listeningServerSocket, currentServerId);
 				
-				//Listen for incoming connections for ever
-				while (true) {
+				if (!currentServerId.equals("AS")){
+					// Create a server socket listening on port 4444
+					listeningSocket = new ServerSocket(serverPort);
+					System.out.println(Thread.currentThread().getName() + 
+							" - Server listening on port" + serverPort);
 					
-					
-					
-					//Accept an incoming client connection request
-					Socket clientSocket = listeningSocket.accept();
-					System.out.println(Thread.currentThread().getName() 
-							+ " - Client conection accepted");
-					
-
-					//Create one thread per connection, each thread will be
-					//responsible for listening for messages from the client, placing them
-					//in a queue, and creating another thread that processes the messages
-					//placed in the queue
-					ClientConnection clientConnection = new ClientConnection(clientSocket, currentServerId);
-					clientConnection.setName("Thread" + currentServerId);
-					clientConnection.start();
-					
-					
-					//Register the new connection with the client manager
-					ServerState.getInstance().clientConnected(clientConnection);
+					//Listen for incoming connections for ever
+					while (true) {
+						//Accept an incoming client connection request
+						Socket clientSocket = listeningSocket.accept();
+						System.out.println(Thread.currentThread().getName() 
+								+ " - Client conection accepted");
+						
+						//Create one thread per connection, each thread will be
+						//responsible for listening for messages from the client, placing them
+						//in a queue, and creating another thread that processes the messages
+						//placed in the queue
+						ClientConnection clientConnection = new ClientConnection(clientSocket, currentServerId);
+						clientConnection.setName("Thread" + currentServerId);
+						clientConnection.start();
+						
+						//Register the new connection with the client manager
+						ServerState.getInstance().clientConnected(clientConnection);
+					}
 				}
 			} catch (Exception e) {
 				e.printStackTrace();

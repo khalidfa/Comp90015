@@ -51,8 +51,8 @@ public class Server {
 		System.out.println("reading command line options");
 		
 		Options options = new Options();
-		options.addOption("n",true,"configuration file path");
-		options.addOption("l",true,"server id");
+		options.addOption("l",true,"configuration file path");
+		options.addOption("n",true,"server id");
 		
 		CommandLineParser parser = new DefaultParser();
 		
@@ -64,12 +64,12 @@ public class Server {
 			e.printStackTrace();
 		}
 		
-		if(cmd.hasOption("n")){
-			configFile = cmd.getOptionValue("n");
+		if(cmd.hasOption("l")){
+			configFile = cmd.getOptionValue("l");
 		}
 		
-		if(cmd.hasOption("l")){
-			currentServerId = cmd.getOptionValue("l");
+		if(cmd.hasOption("n")){
+			currentServerId = cmd.getOptionValue("n");
 		}
 		Server server = new Server();
 		server.execute(currentServerId, configFile);

@@ -21,9 +21,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
 public class  ClientConnection extends Thread {
 
 	private Socket clientSocket;
@@ -37,9 +34,6 @@ public class  ClientConnection extends Thread {
 	String chatRoom = null;
 	String roomId = null;
 	String loginUsername = null;
-	
-	
-	JsonParser parser = new JsonParser();
 
 	public ClientConnection(Socket clientSocket, String currentServerId) {
 		try {

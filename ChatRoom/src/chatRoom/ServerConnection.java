@@ -222,9 +222,20 @@ public class ServerConnection extends Thread {
 					}
 				
 				}
-			
-				System.out.println(s);
-				System.out.println("Message: " + msgJObj);
+
+				if(s.equals("heartbeat")){
+					JSONObject heartbeat = new JSONObject();
+					heartbeat.put("type", "heartbeat");
+					heartbeat.put("alive", true);
+
+					writer.write(heartbeat.toJSONString() + "\n");
+					writer.flush();
+				}
+
+				if(!s.equals("heartbeat")){
+					System.out.println(s);
+					System.out.println("Message: " + msgJObj);
+				}
 			
 			}
 			

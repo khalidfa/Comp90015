@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -31,6 +32,8 @@ public class Server {
 	static List<chatRoomInfo> listOfrooms;
 	static List<chatRoomInfo> listOfLockedRooms;
 	static List<LoginInfo> listOfAuthUsers;
+
+	static String currentServerId;
 	
 	public Server() {
 		listOfAuthUsers = new ArrayList<LoginInfo>();
@@ -44,8 +47,6 @@ public class Server {
 
 	
 	public static void main(String[] args) {
-		
-		String currentServerId= null;
 	    String configFile= null;
 		
 		System.out.println("reading command line options");
@@ -164,7 +165,9 @@ public class Server {
 				listeningServerSocket = new ServerSocket(serverPort2);
 				System.out.println("Server is listenting on port " + serverPort2);
 				ServerConnection serverConnection = new ServerConnection(listeningServerSocket, currentServerId);
-				
+
+				ServerHeartbeatSensor serverHeartbeatSensor = new ServerHeartbeatSensor(this);
+
 				if (!currentServerId.equals("AS")){
 					// Create a server socket listening on port 4444
 					listeningSocket = new ServerSocket(serverPort);
@@ -201,6 +204,42 @@ public class Server {
 					}
 				}
 			}
+	}
+
+	public void deleteServer(String serverId) {
+		Iterator<ServerInfo> serverIterator = listOfservers.iterator();
+		while (serverIterator.hasNext()) {
+			ServerInfo serverInfo = serverIterator.next();
+			if(serverInfo.getServerId().equals(serverId)) {
+				serverIterator.remove();
+				break;
+			}
+		}
+		Iterator<chatRoomInfo> roomIterator = listOfrooms.iterator();
+		while (roomIterator.hasNext()) {
+			chatRoomInfo roomInfo = roomIterator.next();
+			if (roomInfo.getserverId().equals(serverId)) {
+				String chatRoomId = roomInfo.chatRoomId;
+				ArrayList<ClientConnection> connectedClients = new ArrayList<>(ServerState.getInstance().getConnectedClients());
+				for (ClientConnection client : connectedClients){
+					if (client.chatRoom.equals(chatRoomId)){
+						ServerState.getInstance().clientDisconnected(client);
+					}
+				}
+				roomIterator.remove();
+			}
+		}
+	}
+
+	public void addServer(String serverId, String address, int cPort, int sPort) {
+		ServerInfo serverInfo = new ServerInfo(serverId, address, cPort, sPort);
+		listOfservers.add(serverInfo);
+
+		chatRoomInfo room = new chatRoomInfo();
+		room.chatRoomId ="MainHall-"+ serverId;
+		room.owner = "";
+		room.serverId = serverId;
+		listOfrooms.add(room);
 	}
 		 
 	public void serverInfo(List<ServerInfo> s){

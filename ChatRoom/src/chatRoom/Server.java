@@ -175,6 +175,9 @@ public class Server {
 
 				ServerHeartbeatSensor serverHeartbeatSensor = new ServerHeartbeatSensor(this);
 				
+				//add new server
+				ServerAdmin serverAdmin = new ServerAdmin(currentServerId, configFile);
+				
 				if(isNew.equals("N")){
 					
 					MessageHandler.newServer(currentServerId);

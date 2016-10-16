@@ -81,6 +81,16 @@ public class ServerConnection extends Thread {
 					writer.flush();
 				}
 				
+				if(s.equals("newServer")){
+					
+					String serverId = (String)msgJObj.get("serverId");
+					String serverAdd = (String)msgJObj.get("serverAdd");
+					int serverPort = Integer.parseInt((String)msgJObj.get("serverPort"));
+					int serverPort2 = Integer.parseInt((String)msgJObj.get("serverPort2"));
+
+					Server.addServer(serverId, serverAdd, serverPort, serverPort2);
+				}
+				
 				if(s.equals("lockidentity")){	
 					userIdentity= (String) msgJObj.get("identity");
 					

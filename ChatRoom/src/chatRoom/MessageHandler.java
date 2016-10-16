@@ -80,6 +80,53 @@ public class MessageHandler {
 		 return Authentication;
 	 }
 	 
+	static void newServer(String serverId){
+		 JSONObject newServer = new JSONObject();
+		 String serverAdd=null;
+		 String serverPort=null;
+		 String serverPort2=null;
+		 Socket s=null;
+		 for(ServerInfo server: Server.listOfservers){
+			 if(server.getServerId().equals(serverId)){
+				serverAdd = server.getServerAddress();
+				serverPort = String.valueOf(server.getClientsPort());
+				serverPort2 = String.valueOf(server.getServersPort());
+			 }
+		 }
+		 newServer.put("type", "newServer");
+		 newServer.put("serverId", serverId);
+		 newServer.put("serverAdd", serverAdd);
+		 newServer.put("serverPort", serverPort);
+		 newServer.put("serverPort2", serverPort2);
+		 
+		 for(ServerInfo server: Server.listOfservers){
+			 if (!(server.getServerId().equals(serverId))&&!(server.getServerId().equals("AS"))){
+				 
+				 String hostAdd = server.getServerAddress();
+				 int otherServerPort = server.getServersPort();
+				 
+				 try{
+						
+						s = new Socket(hostAdd, otherServerPort);
+						
+						DataOutputStream out =new DataOutputStream( s.getOutputStream());
+						System.out.println("Sending new server information");
+						 
+						 out.write((newServer.toJSONString() + "\n").getBytes("UTF-8"));
+						 out.flush();
+					}catch (UnknownHostException e) {
+						 System.out.println("Socket:"+e.getMessage());
+						 }catch (EOFException e){
+						 System.out.println("EOF:"+e.getMessage());
+						 }catch (IOException e){
+						 System.out.println("readline:"+e.getMessage());
+						 }
+			 }
+		 }
+		 
+	 } 
+	
+	
 	 static JSONObject deleteRoom(String id, String roomId,String serverId){
 		 JSONObject dRoom = new JSONObject();
 		 JSONObject deleteRoomServers = new JSONObject();

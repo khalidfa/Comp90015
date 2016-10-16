@@ -35,6 +35,8 @@ public class Server {
 
 	static String currentServerId;
 	
+	static String isNew;
+	
 	public Server() {
 		listOfAuthUsers = new ArrayList<LoginInfo>();
 		listOflockedIds = new ArrayList<UserInfo>();
@@ -93,10 +95,14 @@ public class Server {
 	        	
 	        	for (int i=0 ; i< tokens.length ; i++){
 	        		
-	        		
+	        		String [] finalTakens = new String[]{"","","","",""};
 	        		String [] newTokens = line.split("\\t");
-	        			 s = new ServerInfo(newTokens[0],newTokens[1],Integer.parseInt(newTokens[2]),Integer.parseInt(newTokens[3]));
-	        			listOfservers.add(s);
+				for(int j=0;j<newTokens.length;j++){
+	        			finalTakens[j]=newTokens[j];
+	        			
+	        		}
+	        		s = new ServerInfo(finalTakens[0],finalTakens[1],Integer.parseInt(finalTakens[2]),Integer.parseInt(finalTakens[3]),finalTakens[4]);
+	        		listOfservers.add(s);
 	        	}
 	        
 	        }
@@ -122,6 +128,7 @@ public class Server {
 				if (server.getServerId().equals(currentServerId)){
 	    			serverPort = server.getClientsPort();
 	    			serverPort2 = server.getServersPort();
+				isNew = server.getIsNew();
 	    		}
 	        	
 	        }
@@ -167,6 +174,12 @@ public class Server {
 				ServerConnection serverConnection = new ServerConnection(listeningServerSocket, currentServerId);
 
 				ServerHeartbeatSensor serverHeartbeatSensor = new ServerHeartbeatSensor(this);
+				
+				if(isNew.equals("N")){
+					
+					MessageHandler.newServer(currentServerId);
+					newSerChange(configFile);
+				}
 
 				if (!currentServerId.equals("AS")){
 					// Create a server socket listening on port 4444
@@ -231,7 +244,7 @@ public class Server {
 		}
 	}
 
-	public void addServer(String serverId, String address, int cPort, int sPort) {
+	public static void addServer(String serverId, String address, int cPort, int sPort) {
 		ServerInfo serverInfo = new ServerInfo(serverId, address, cPort, sPort);
 		listOfservers.add(serverInfo);
 
@@ -240,6 +253,45 @@ public class Server {
 		room.owner = "";
 		room.serverId = serverId;
 		listOfrooms.add(room);
+	}
+	
+	public void newSerChange(String configFile){
+		try {
+			
+		    BufferedWriter fWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(configFile)));
+		    BufferedWriter OWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(configFile,true)));
+		    int temp=0;
+			for(ServerInfo server: listOfservers){   
+				
+				String serverId=server.getServerId();
+				String serverAdd=server.getServerAddress();
+				String serverPort=String.valueOf(server.getClientsPort());
+				String serverPort2=String.valueOf(server.getServersPort());
+				String outMsg = "";
+				outMsg = outMsg.concat(serverId+"	"+serverAdd+"	"+serverPort+"	"+serverPort2);
+				
+			
+				if(temp==0){
+					System.out.println(outMsg);
+					fWriter.write(outMsg+"\n");
+					
+					fWriter.flush();
+					temp=temp+1;
+				}
+				else{
+					OWriter.write(outMsg+"\n");
+					OWriter.flush();
+				}
+			
+			}
+			fWriter.close();
+			OWriter.close();
+			
+			
+		}catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 		 
 	public void serverInfo(List<ServerInfo> s){

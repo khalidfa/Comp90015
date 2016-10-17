@@ -11,9 +11,12 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+
 public class MessageReceiveThread implements Runnable {
 
-	private Socket socket;
+	private SSLSocket sslsocket;
 	private State state;
 	private boolean debug;
 
@@ -25,8 +28,8 @@ public class MessageReceiveThread implements Runnable {
 	
 	private MessageSendThread messageSendThread;
 
-	public MessageReceiveThread(Socket socket, State state, MessageSendThread messageSendThread, boolean debug) throws IOException {
-		this.socket = socket;
+	public MessageReceiveThread(SSLSocket socket, State state, MessageSendThread messageSendThread, boolean debug) throws IOException {
+		this.sslsocket = socket;
 		this.state = state;
 		this.messageSendThread = messageSendThread;
 		this.debug = debug;
@@ -45,11 +48,11 @@ public class MessageReceiveThread implements Runnable {
 					System.out.println("Receiving: " + message.toJSONString());
 					System.out.print("[" + state.getRoomId() + "] " + state.getIdentity() + "> ");
 				}
-				MessageReceive(socket, message);
+				MessageReceive(sslsocket, message);
 			}
 			System.exit(0);
 			in.close();
-			socket.close();
+			sslsocket.close();
 		} catch (ParseException e) {
 			System.out.println("Message Error: " + e.getMessage());
 			System.exit(1);
@@ -60,7 +63,7 @@ public class MessageReceiveThread implements Runnable {
 
 	}
 
-	public void MessageReceive(Socket socket, JSONObject message)
+	public void MessageReceive(SSLSocket socket, JSONObject message)
 			throws IOException, ParseException {
 		String type = (String) message.get("type");
 		boolean authenticated = true;
@@ -210,8 +213,8 @@ public class MessageReceiveThread implements Runnable {
 				System.out.println("Connecting to server " + host + ":" + port);
 				System.out.print("[" + state.getRoomId() + "] " + state.getIdentity() + "> ");
 			}
-			
-			Socket temp_socket = new Socket(host, port);
+			SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+			SSLSocket temp_socket = (SSLSocket) sslsocketfactory.createSocket(host, port);
 			
 			// send #movejoin
 			DataOutputStream out = new DataOutputStream(temp_socket.getOutputStream());
@@ -256,11 +259,11 @@ public class MessageReceiveThread implements Runnable {
 		}
 	}
 	
-	public void switchServer(Socket temp_socket, BufferedReader temp_in) throws IOException {
+	public void switchServer(SSLSocket temp_socket, BufferedReader temp_in) throws IOException {
 		in.close();
 		in = temp_in;
-		socket.close();
-		socket = temp_socket;
+		sslsocket.close();
+		sslsocket = temp_socket;
 	}
 
 	private void send(DataOutputStream out, JSONObject obj) throws IOException {

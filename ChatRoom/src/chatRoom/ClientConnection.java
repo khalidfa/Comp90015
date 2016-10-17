@@ -23,7 +23,7 @@ import org.json.simple.parser.JSONParser;
 
 public class  ClientConnection extends Thread {
 
-	private Socket clientSocket;
+	private SSLSocket SSLclientsocket;
 	private BufferedReader reader;
 	private BufferedWriter writer;
 	//This queue holds messages sent by the client or messages intended for the client from other threads
@@ -35,11 +35,11 @@ public class  ClientConnection extends Thread {
 	String roomId = null;
 	String loginUsername = null;
 
-	public ClientConnection(Socket clientSocket, String currentServerId) {
+	public ClientConnection(SSLSocket clientSocket, String currentServerId) {
 		try {
-			this.clientSocket = clientSocket;
-			reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), "UTF-8"));
-			writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), "UTF-8"));	
+			this.SSLclientsocket = clientSocket;
+			reader = new BufferedReader(new InputStreamReader(SSLclientsocket.getInputStream(), "UTF-8"));
+			writer = new BufferedWriter(new OutputStreamWriter(SSLclientsocket.getOutputStream(), "UTF-8"));	
 			messageQueue = new LinkedBlockingQueue<Message>();
 			this.currentServerId = currentServerId;
 		} catch (Exception e) {
@@ -416,7 +416,7 @@ public class  ClientConnection extends Thread {
 				}
 			}
 			
-			clientSocket.close();
+			SSLclientsocket.close();
 			//ServerState.getInstance().clientDisconnected(this);
 			
 			
@@ -430,7 +430,7 @@ public class  ClientConnection extends Thread {
 				try {
 					reader.close();
 					writer.close();
-					clientSocket.close();
+					SSLclientsocket.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -446,7 +446,7 @@ public class  ClientConnection extends Thread {
 	
 	public void removeAuthUser(String username){
 		 JSONObject releaseLoginUsername = new JSONObject();
-		 Socket s;
+		 SSLSocket s;
 		 JSONParser parser = new JSONParser();
 		 String AuthApproval = "true";
 		 String authenticated = null;
@@ -461,7 +461,8 @@ public class  ClientConnection extends Thread {
 					int serverPort = server.getServersPort();
 				
 					try{
-						s = new Socket(hostName, serverPort);
+						SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+						s = (SSLSocket) sslsocketfactory.createSocket(hostName, serverPort);
 						DataOutputStream out =new DataOutputStream( s.getOutputStream());
 						
 						System.out.println("Sending data");

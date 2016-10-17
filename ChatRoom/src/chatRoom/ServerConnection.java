@@ -16,17 +16,22 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+
 public class ServerConnection extends Thread {
-	Socket serverSocket;
+	private SSLServerSocket listeningServerSocket;
+	private SSLSocket serverSocket;
+	
 	private BufferedReader reader;
 	private BufferedWriter writer;
 	private String currentServerId;
 	JSONObject msgJObj = null;
-	ServerSocket listeningServerSocket = null;
 	
 	
 
-	public  ServerConnection(ServerSocket listeningServerSocket , String currentServerId){
+	public  ServerConnection(SSLServerSocket listeningServerSocket , String currentServerId){
 		try {
 			this.currentServerId = currentServerId;
 			this.listeningServerSocket = listeningServerSocket;
@@ -52,7 +57,7 @@ public class ServerConnection extends Thread {
 			
 			while(true) {
 				
-				Socket serverSocket = listeningServerSocket.accept();
+				serverSocket = (SSLSocket) listeningServerSocket.accept();
 				
 				reader = new BufferedReader(new InputStreamReader(serverSocket.getInputStream(), "UTF-8"));
 				writer = new BufferedWriter(new OutputStreamWriter(serverSocket.getOutputStream(), "UTF-8"));

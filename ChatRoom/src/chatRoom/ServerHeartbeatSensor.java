@@ -11,6 +11,9 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+
 public class ServerHeartbeatSensor extends Thread {
 
     private Server server;
@@ -19,7 +22,7 @@ public class ServerHeartbeatSensor extends Thread {
         this.server = server;
         try {
             //Wait 5 seconds before checking other servers status.
-            Thread.sleep(5000);
+            Thread.sleep(60000);
             this.start();
         } catch(Exception e) {
             Thread.currentThread().interrupt();
@@ -41,13 +44,13 @@ public class ServerHeartbeatSensor extends Thread {
                     String hostName = serverInfo.getServerAddress();
                     int serverPort = serverInfo.getServersPort();
 
-                    Socket socket = null;
+                    SSLSocket SSLsocket = null;
                     try{
+                        SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+                        SSLsocket = (SSLSocket) sslsocketfactory.createSocket(hostName, serverPort);
 
-                        socket = new Socket(hostName, serverPort);
-
-                        DataInputStream in = new DataInputStream( socket.getInputStream());
-                        DataOutputStream out =new DataOutputStream( socket.getOutputStream());
+                        DataInputStream in = new DataInputStream( SSLsocket.getInputStream());
+                        DataOutputStream out =new DataOutputStream( SSLsocket.getOutputStream());
 
                         out.write((heartbeatMessage.toJSONString() + "\n").getBytes("UTF-8"));
                         out.flush();
@@ -78,7 +81,7 @@ public class ServerHeartbeatSensor extends Thread {
             }
 
             try {
-                Thread.sleep(5000);
+                Thread.sleep(50000);
             } catch(InterruptedException ex) {
                 Thread.currentThread().interrupt();
             }

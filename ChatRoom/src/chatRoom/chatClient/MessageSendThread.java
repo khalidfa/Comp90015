@@ -5,11 +5,12 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.Scanner;
 
+import javax.net.ssl.SSLSocket;
 import org.json.simple.JSONObject;
 
 public class MessageSendThread implements Runnable {
 
-	private Socket socket;
+	private SSLSocket sslsocket;
 
 	private DataOutputStream out;
 	
@@ -20,8 +21,8 @@ public class MessageSendThread implements Runnable {
 	// reading from console
 	private Scanner cmdin = new Scanner(System.in);
 
-	public MessageSendThread(Socket socket, State state, boolean debug) throws IOException {
-		this.socket = socket;
+	public MessageSendThread(SSLSocket socket, State state, boolean debug) throws IOException {
+		this.sslsocket = socket;
 		this.state = state;
 		out = new DataOutputStream(socket.getOutputStream());
 		this.debug = debug;
@@ -50,7 +51,7 @@ public class MessageSendThread implements Runnable {
 			String msg = cmdin.nextLine();
 			System.out.print("[" + state.getRoomId() + "] " + state.getIdentity() + "> ");
 			try {
-				MessageSend(socket, msg);
+				MessageSend(sslsocket, msg);
 			} catch (IOException e) {
 				System.out.println("Communication Error: " + e.getMessage());
 				System.exit(1);
@@ -69,7 +70,7 @@ public class MessageSendThread implements Runnable {
 	}
 	
 	// send command and check validity
-	public void MessageSend(Socket socket, String msg) throws IOException {
+	public void MessageSend(SSLSocket socket, String msg) throws IOException {
 		JSONObject sendToServer = new JSONObject();
 		String []array = msg.split(" ");
 		if(!array[0].startsWith("#")) {
@@ -123,13 +124,13 @@ public class MessageSendThread implements Runnable {
 		
 	}
 
-	public void switchServer(Socket temp_socket, DataOutputStream temp_out) throws IOException {
+	public void switchServer(SSLSocket temp_socket, DataOutputStream temp_out) throws IOException {
 		// switch server initiated by the receiving thread
 		// need to use synchronize
 		synchronized(out) {
 			out.close();
 			out = temp_out;
 		}
-		socket = temp_socket;
+		SSLSocket = temp_socket;
 	}
 }

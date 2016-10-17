@@ -22,6 +22,9 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+
 public class MessageHandler {
 
 	 private static BufferedReader reader;
@@ -29,8 +32,8 @@ public class MessageHandler {
 	 
 	 static JSONObject login(String username,String password) throws ParseException{
 		
+		 SSLSocket sslsocket = null;
 		 JSONObject Authentication = new JSONObject();
-		 Socket s;
 		 JSONParser parser = new JSONParser();
 		 String AuthApproval = "true";
 		 String authenticated = null;
@@ -46,10 +49,11 @@ public class MessageHandler {
 				
 					try{
 						
-						s = new Socket(hostName, serverPort);
+						SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+						sslsocket = (SSLSocket) sslsocketfactory.createSocket(hostName, serverPort);
 						
-						DataOutputStream out =new DataOutputStream( s.getOutputStream());
-						DataInputStream in = new DataInputStream(s.getInputStream());
+						DataOutputStream out =new DataOutputStream(sslsocket.getOutputStream());
+						DataInputStream in = new DataInputStream(sslsocket.getInputStream());
 						System.out.println("Sending data");
 						 
 						 out.write((Authentication.toJSONString() + "\n").getBytes("UTF-8"));
@@ -107,9 +111,10 @@ public class MessageHandler {
 				 
 				 try{
 						
-						s = new Socket(hostAdd, otherServerPort);
+						SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+						sslsocket = (SSLSocket) sslsocketfactory.createSocket(hostName, serverPort);
 						
-						DataOutputStream out =new DataOutputStream( s.getOutputStream());
+						DataOutputStream out =new DataOutputStream(sslsocket.getOutputStream());
 						System.out.println("Sending new server information");
 						 
 						 out.write((newServer.toJSONString() + "\n").getBytes("UTF-8"));
@@ -131,7 +136,7 @@ public class MessageHandler {
 		 JSONObject dRoom = new JSONObject();
 		 JSONObject deleteRoomServers = new JSONObject();
 		 boolean found = false;
-		 Socket s;
+		 SSLSocket sslsocket;
 		 
 		 for(chatRoomInfo room : Server.listOfrooms){
 			 if((room.owner.equals(id))&&(room.chatRoomId.equals(roomId))){
@@ -156,8 +161,8 @@ public class MessageHandler {
 						int serverPort = server.getServersPort();
 					
 						try{
-							
-							s = new Socket(hostName, serverPort);
+							SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+							sslsocket = (SSLSocket) sslsocketfactory.createSocket(hostName, serverPort);
 							
 							DataOutputStream out =new DataOutputStream( s.getOutputStream());
 							System.out.println("Sending data");
@@ -243,7 +248,7 @@ public class MessageHandler {
 	 }
 
 	 static void releaseRoom(String roomId , String currentServerId,String approval){
-		 Socket s =null;
+			SSLSocket sslsocket = null;
 			JSONObject releaseRoom = new JSONObject();
 			
 			
@@ -259,10 +264,10 @@ public class MessageHandler {
 					int serverPort = server.getServersPort();
 				
 					try{
+						SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+						sslsocket = (SSLSocket) sslsocketfactory.createSocket(hostName, serverPort);
 						
-						s = new Socket(hostName, serverPort);
-						
-						DataOutputStream out =new DataOutputStream( s.getOutputStream());
+						DataOutputStream out =new DataOutputStream(sslsocket.getOutputStream());
 						System.out.println("Sending data");
 						 
 						 out.write((releaseRoom.toJSONString() + "\n").getBytes("UTF-8"));
@@ -279,7 +284,7 @@ public class MessageHandler {
 	 }
 	 
 	 static void releaseIdentity (String id ,String currentServerId){
-		Socket s =null;
+		SSLSocket sslsocket = null;
 		JSONObject releaseIdnentity = new JSONObject();
 	
 		
@@ -294,10 +299,10 @@ public class MessageHandler {
 				int serverPort = server.getServersPort();
 			
 				try{
+					SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+					sslsocket = (SSLSocket) sslsocketfactory.createSocket(hostName, serverPort);
 					
-					s = new Socket(hostName, serverPort);
-					
-					DataOutputStream out =new DataOutputStream( s.getOutputStream());
+					DataOutputStream out =new DataOutputStream(sslsocket.getOutputStream());
 					System.out.println("Sending data");
 					 
 					 out.write((releaseIdnentity.toJSONString() + "\n").getBytes("UTF-8"));
@@ -345,7 +350,7 @@ public class MessageHandler {
 		
 		JSONObject newIdentityMessage = new JSONObject();
 		JSONObject lockIdentity = new JSONObject();
-		Socket s =null;
+		SSLSocket sslsocket;
 		JSONParser parser = new JSONParser();
 	
 		
@@ -382,11 +387,11 @@ public class MessageHandler {
 					System.out.println("The host name =" + hostName);
 					System.out.println("The port =" + serverPort);
 					try{
-						
-						s = new Socket(hostName, serverPort);
+						SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+						sslsocket = (SSLSocket) sslsocketfactory.createSocket(hostName, serverPort);
 					
-						DataInputStream in = new DataInputStream( s.getInputStream());
-						DataOutputStream out =new DataOutputStream( s.getOutputStream());
+						DataInputStream in = new DataInputStream(sslsocket.getInputStream());
+						DataOutputStream out =new DataOutputStream(sslsocket.getOutputStream());
 						System.out.println("Sending data");
 						 
 						 out.write((lockIdentity.toJSONString() + "\n").getBytes("UTF-8"));
@@ -444,7 +449,7 @@ public class MessageHandler {
 		boolean found = false;
 		boolean sFound = false;
 		String lockR = "false";
-		Socket s;
+		SSLSocket sslsocket = null;
 		
 		newRoomMessage.put("type","createroom");
 		newRoomMessage.put("roomid",roomId);
@@ -475,11 +480,11 @@ public class MessageHandler {
 						int serverPort = server.getServersPort();
 						
 						try{
-							
-							s = new Socket(hostName, serverPort);
+							SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+							sslsocket = (SSLSocket) sslsocketfactory.createSocket(hostName, serverPort);
 						
-							DataInputStream in = new DataInputStream( s.getInputStream());
-							DataOutputStream out =new DataOutputStream( s.getOutputStream());
+							DataInputStream in = new DataInputStream(sslsocket.getInputStream());
+							DataOutputStream out =new DataOutputStream(sslsocket.getOutputStream());
 							System.out.println("Sending data");
 							 
 							 out.write((lockRoom.toJSONString() + "\n").getBytes("UTF-8"));

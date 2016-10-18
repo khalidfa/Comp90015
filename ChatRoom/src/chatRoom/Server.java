@@ -24,8 +24,6 @@ public class Server {
 
 	static String currentServerId;
 	
-	static String isNew;
-	
 	static SSLServerSocket ssllisteningSocket;
 	static SSLServerSocket ssllisteningServerSocket;
 	
@@ -79,8 +77,7 @@ public class Server {
 	
 	
 	public void execute(String currentServerId, String configFile) {
-		ServerInfo s;
-		int serverPort = 443;
+		ServerInfo serverInfo;
 		
 		
 		
@@ -100,21 +97,23 @@ public class Server {
 	        			finalTakens[j]=newTokens[j];
 	        			
 	        		}
-	        		s = new ServerInfo(finalTakens[0],finalTakens[1],Integer.parseInt(finalTakens[2]),Integer.parseInt(finalTakens[3]),finalTakens[4]);
-	        		listOfservers.add(s);
+	        		serverInfo = new ServerInfo(finalTakens[0],finalTakens[1],Integer.parseInt(finalTakens[2]),Integer.parseInt(finalTakens[3]),finalTakens[4]);
+	        		if (serverInfo.getServerId().equals("AS") || serverInfo.getServerId().equals(currentServerId)) {
+						listOfservers.add(serverInfo);
+					}
 	        	}
 	        
 	        }
 	        
-	        for (ServerInfo server: listOfservers){
-				if (!(server.getServerId().equals("AS"))){
-					chatRoomInfo room = new chatRoomInfo();
-					room.chatRoomId ="MainHall-"+ server.getServerId();
-					room.owner = "";
-					room.serverId = server.getServerId();
-					listOfrooms.add(room);
-				}
-			}
+//	        for (ServerInfo server: listOfservers){
+//				if (!(server.getServerId().equals("AS"))){
+//					chatRoomInfo room = new chatRoomInfo();
+//					room.chatRoomId ="MainHall-"+ server.getServerId();
+//					room.owner = "";
+//					room.serverId = server.getServerId();
+//					listOfrooms.add(room);
+//				}
+//			}
 	        
 			}catch (Exception e){
 				System.out.println("configuration file was not found");
@@ -122,12 +121,17 @@ public class Server {
 			}
 			
 			//serverInfo(listOfservers);
+			int serverPort = 443;
 			int serverPort2 = 0;
 			for (ServerInfo server : listOfservers ){
 				if (server.getServerId().equals(currentServerId)){
 	    			serverPort = server.getClientsPort();
 	    			serverPort2 = server.getServersPort();
-				isNew = server.getIsNew();
+					chatRoomInfo room = new chatRoomInfo();
+					room.chatRoomId ="MainHall-"+ server.getServerId();
+					room.owner = "";
+					room.serverId = server.getServerId();
+					listOfrooms.add(room);
 	    		}
 	        	
 	        }
@@ -176,15 +180,13 @@ public class Server {
 				ServerHeartbeatSensor serverHeartbeatSensor = new ServerHeartbeatSensor(this);
 				
 				//add new server
-				ServerAdmin serverAdmin = new ServerAdmin(currentServerId, configFile);
-				
-				if(isNew.equals("N")){
-					
-					MessageHandler.newServer(currentServerId);
-					newSerChange(configFile);
-				}
+//				ServerAdmin serverAdmin = new ServerAdmin(currentServerId, configFile);
+
+//				newSerChange(configFile);
 
 				if (!currentServerId.equals("AS")){
+					MessageHandler.newServer(currentServerId);
+
 					// Create a server socket listening on port 443
 					SSLServerSocket ssllisteningSocket = (SSLServerSocket) sslserversocketfactory.createServerSocket(serverPort);
 					System.out.println(Thread.currentThread().getName() + 
@@ -257,6 +259,10 @@ public class Server {
 	}
 
 	public static void addServer(String serverId, String address, int cPort, int sPort) {
+		if (serverId.equals(currentServerId)) {
+			return;
+		}
+
 		ServerInfo serverInfo = new ServerInfo(serverId, address, cPort, sPort);
 		listOfservers.add(serverInfo);
 
@@ -265,6 +271,8 @@ public class Server {
 		room.owner = "";
 		room.serverId = serverId;
 		listOfrooms.add(room);
+
+		System.out.println("Added server: " + serverId);
 	}
 	
 	public void newSerChange(String configFile){

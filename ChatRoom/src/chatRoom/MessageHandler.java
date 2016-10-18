@@ -90,7 +90,6 @@ public class MessageHandler {
 		 String serverAdd=null;
 		 String serverPort=null;
 		 String serverPort2=null;
-		 Socket s=null;
 		 for(ServerInfo server: Server.listOfservers){
 			 if(server.getServerId().equals(serverId)){
 				serverAdd = server.getServerAddress();
@@ -103,32 +102,54 @@ public class MessageHandler {
 		 newServer.put("serverAdd", serverAdd);
 		 newServer.put("serverPort", serverPort);
 		 newServer.put("serverPort2", serverPort2);
-		 
-		 for(ServerInfo server: Server.listOfservers){
-			 if (!(server.getServerId().equals(serverId))&&!(server.getServerId().equals("AS"))){
 
-				 String hostAdd = server.getServerAddress();
-				 int otherServerPort = server.getServersPort();
-				 
-				 try{
-						
-						SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-						sslsocket = (SSLSocket) sslsocketfactory.createSocket(hostAdd, otherServerPort);
-						
-						DataOutputStream out =new DataOutputStream(sslsocket.getOutputStream());
-						System.out.println("Sending new server information");
-						 
-						 out.write((newServer.toJSONString() + "\n").getBytes("UTF-8"));
-						 out.flush();
-					}catch (UnknownHostException e) {
-						 System.out.println("Socket:"+e.getMessage());
-						 }catch (EOFException e){
-						 System.out.println("EOF:"+e.getMessage());
-						 }catch (IOException e){
-						 System.out.println("readline:"+e.getMessage());
-						 }
-			 }
-		 }
+		ServerInfo serverAS = null;
+		for(ServerInfo server: Server.listOfservers) {
+			if (server.getServerId().equals("AS")) {
+				serverAS = server;
+				break;
+			}
+		}
+
+		if (serverAS != null) {
+			String hostAdd = serverAS.getServerAddress();
+			int otherServerPort = serverAS.getServersPort();
+
+			try{
+
+				SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+				sslsocket = (SSLSocket) sslsocketfactory.createSocket(hostAdd, otherServerPort);
+
+				DataOutputStream out =new DataOutputStream(sslsocket.getOutputStream());
+				System.out.println("Sending new server information");
+
+				out.write((newServer.toJSONString() + "\n").getBytes("UTF-8"));
+				out.flush();
+
+				JSONParser parser = new JSONParser();
+				reader = new BufferedReader(new InputStreamReader(sslsocket.getInputStream(), "UTF-8"));
+				JSONObject jsonObject = (JSONObject) parser.parse(reader.readLine());
+
+				ArrayList<Map<String, Object>> serversObj = (ArrayList<Map<String, Object>>) jsonObject.get("servers");
+				for (Map<String, Object> serverObj : serversObj) {
+					String newServerId = String.valueOf(serverObj.get("serverId"));
+					String newServerAdd = String.valueOf(serverObj.get("serverAdd"));
+					int newCPort = Integer.parseInt(String.valueOf(serverObj.get("serverPort")));
+					int newSPort = Integer.parseInt(String.valueOf(serverObj.get("serverPort2")));
+					Server.addServer(newServerId, newServerAdd, newCPort, newSPort);
+				}
+
+
+			}catch (UnknownHostException e) {
+				System.out.println("Socket:"+e.getMessage());
+			}catch (EOFException e){
+				System.out.println("EOF:"+e.getMessage());
+			}catch (IOException e){
+				System.out.println("readline:"+e.getMessage());
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+		}
 		 
 	 } 
 	

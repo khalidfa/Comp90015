@@ -1,15 +1,10 @@
 package chatRoom;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Iterator;
-import java.util.List;
+import java.net.UnknownHostException;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -87,13 +82,66 @@ public class ServerConnection extends Thread {
 				}
 				
 				if(s.equals("newServer")){
-					
-					String serverId = (String)msgJObj.get("serverId");
-					String serverAdd = (String)msgJObj.get("serverAdd");
-					int serverPort = Integer.parseInt((String)msgJObj.get("serverPort"));
-					int serverPort2 = Integer.parseInt((String)msgJObj.get("serverPort2"));
+					String newServerId = (String)msgJObj.get("serverId");
+					String newServerAdd = (String)msgJObj.get("serverAdd");
+					int newCPort = Integer.parseInt((String)msgJObj.get("serverPort"));
+					int newSPort = Integer.parseInt((String)msgJObj.get("serverPort2"));
 
-					Server.addServer(serverId, serverAdd, serverPort, serverPort2);
+					if (currentServerId.equals("AS")) {
+						for (ServerInfo server : Server.listOfservers){
+							if (!(server.getServerId().equals("AS"))){
+
+								String hostName = server.getServerAddress();
+								int otherServerPort = server.getServersPort();
+
+								SSLSocket SSLsocket = null;
+								try{
+									SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+									SSLsocket = (SSLSocket) sslsocketfactory.createSocket(hostName, otherServerPort);
+
+									DataInputStream in = new DataInputStream( SSLsocket.getInputStream());
+									DataOutputStream out =new DataOutputStream( SSLsocket.getOutputStream());
+
+									out.write((msgJObj.toJSONString() + "\n").getBytes("UTF-8"));
+									out.flush();
+								} catch (Exception e) {
+									// Server failed
+									System.out.println("Error communicating with server: " + server.getServerId());
+								} finally {
+									if (SSLsocket != null) {
+										try {
+											SSLsocket.close();
+										} catch (IOException e) {
+											e.printStackTrace();
+										}
+									}
+								}
+							}
+						}
+
+						JSONObject serverListMessage = new JSONObject();
+						serverListMessage.put("type", "newServerResponse");
+
+						ArrayList<Map<String, Object>> servers = new ArrayList<>();
+						for (ServerInfo serverInfo : Server.listOfservers) {
+							if (serverInfo.getServerId().equals("AS")) {
+								continue;
+							}
+							Map<String, Object> info = new HashMap<>();
+							info.put("serverId", serverInfo.getServerId());
+							info.put("serverAdd", serverInfo.getServerAddress());
+							info.put("serverPort", serverInfo.getClientsPort());
+							info.put("serverPort2", serverInfo.getServersPort());
+							servers.add(info);
+						}
+
+						serverListMessage.put("servers", servers);
+
+						writer.write(serverListMessage.toJSONString() + "\n");
+						writer.flush();
+					}
+
+					Server.addServer(newServerId, newServerAdd, newCPort, newSPort);
 				}
 				
 				if(s.equals("lockidentity")){	
@@ -248,7 +296,6 @@ public class ServerConnection extends Thread {
 				}
 
 				if(!s.equals("heartbeat")){
-					System.out.println(s);
 					System.out.println("Message: " + msgJObj);
 				}
 			

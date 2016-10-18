@@ -37,7 +37,7 @@ public class  ClientConnection extends Thread {
 	String chatRoom = null;
 	String roomId = null;
 	String loginUsername = null;
-
+	String username = null;
 	public ClientConnection(SSLSocket clientSocket, String currentServerId) {
 		try {
 			this.SSLclientsocket = clientSocket;
@@ -86,7 +86,7 @@ public class  ClientConnection extends Thread {
 			    	boolean authentication = true;
 			    	
 			    	if (s.equals("login")){
-						String username = (String) msgJObj.get("username");
+					    username = (String) msgJObj.get("username");
 						String password = (String) msgJObj.get("password");
 						
 						JSONObject authenticated =MessageHandler.login(username,password);
@@ -140,6 +140,12 @@ public class  ClientConnection extends Thread {
 				    		
 						
 						}else{
+							
+						
+							
+							removeAuthUser(this.username);
+							 
+							System.out.println("i'm inside");
 							ServerState.getInstance().DisconnectClient(this);
 							break;
 						}

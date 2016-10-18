@@ -141,15 +141,26 @@ public class Server {
 					while ((line = br.readLine()) != null)
 					{   
 						String [] tokens = line.split("\\n");
-						
+						String encryptedPassword = null;
 						for (int i=0 ; i< tokens.length ; i++){
 							
 							String [] newTokens = line.split("\\t");
 //							System.out.println(newTokens[0]);
 //							System.out.println(newTokens[1]);
 							LoginInfo login = new LoginInfo();
+						
 							login.loginUsername = newTokens[0];
-							login.loginPassword = newTokens[1];
+							try {
+								encryptedPassword = EnDecryption.encrypt(newTokens[1]);
+								String EnPassword = EnDecryption.decrypt(encryptedPassword);
+								System.out.println("decrypt: " + EnPassword);
+							} catch (Exception e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							login.loginPassword= encryptedPassword;
+							System.out.println(encryptedPassword);
+							//login.loginPassword = newTokens[1];
 							listOfAuthUsers.add(login);
 						}
 					

@@ -446,7 +446,11 @@ public class  ClientConnection extends Thread {
 	public BlockingQueue<Message> getMessageQueue() {
 		return messageQueue;
 	}
-	
+
+	public void removeAuthUser() {
+		removeAuthUser(loginUsername);
+	}
+
 	public void removeAuthUser(String username){
 		 JSONObject releaseLoginUsername = new JSONObject();
 		 SSLSocket s;

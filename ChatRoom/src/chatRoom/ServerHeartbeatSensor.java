@@ -28,14 +28,14 @@ public class ServerHeartbeatSensor extends Thread {
     }
 
     public void run() {
-        //Wait 5 seconds before checking other servers status.
-        try {
-            Thread.sleep(5000);
-        } catch(InterruptedException ex) {
-            Thread.currentThread().interrupt();
-        }
-
         while (true) {
+            //Wait 5 seconds before checking other servers status.
+            try {
+                Thread.sleep(5000);
+            } catch(InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+
             JSONObject heartbeatMessage = new JSONObject();
             heartbeatMessage.put("type", "heartbeat");
 

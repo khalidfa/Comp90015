@@ -366,7 +366,7 @@ public class MessageHandler {
     	    if (user.getUsername().equals(identity))
     	    {
     		    found =false;
-    		    System.out.println("i found it ");
+//    		    System.out.println("i found it ");
     	    }
         }
        
@@ -385,8 +385,8 @@ public class MessageHandler {
 					
 					String hostName = server.getServerAddress();
 					int serverPort = server.getServersPort();
-					System.out.println("The host name =" + hostName);
-					System.out.println("The port =" + serverPort);
+//					System.out.println("The host name =" + hostName);
+//					System.out.println("The port =" + serverPort);
 					try{
 						SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
 						sslsocket = (SSLSocket) sslsocketfactory.createSocket(hostName, serverPort);

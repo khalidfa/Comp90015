@@ -224,7 +224,7 @@ public class Server {
 
 	public void deleteServer(String serverId) {
 		Iterator<ServerInfo> serverIterator = listOfservers.iterator();
-		while (serverIterator.hasNext()) {
+			while (serverIterator.hasNext()) {
 			ServerInfo serverInfo = serverIterator.next();
 			if(serverInfo.getServerId().equals(serverId)) {
 				serverIterator.remove();
@@ -239,6 +239,15 @@ public class Server {
 				ArrayList<ClientConnection> connectedClients = new ArrayList<>(ServerState.getInstance().getConnectedClients());
 				for (ClientConnection client : connectedClients){
 					if (client.chatRoom != null && client.chatRoom.equals(chatRoomId)){
+						Iterator<UserInfo> itr = Server.listOfusers.iterator();
+						while (itr.hasNext()) {
+							UserInfo str = itr.next();
+							if(str.username.equals(client.identity)) {
+								itr.remove();
+								break;
+							}
+						}
+						client.removeAuthUser();
 						ServerState.getInstance().clientDisconnected(client);
 					}
 				}

@@ -139,6 +139,13 @@ public class MessageHandler {
 					Server.addServer(newServerId, newServerAdd, newCPort, newSPort);
 				}
 
+				ArrayList<Map<String, Object>> roomsObj = (ArrayList<Map<String, Object>>) jsonObject.get("rooms");
+				for (Map<String, Object> roomObj : roomsObj) {
+					String roomId = String.valueOf(roomObj.get("roomId"));
+					String owner = String.valueOf(roomObj.get("owner"));
+					String roomServerId = String.valueOf(roomObj.get("serverId"));
+					Server.addRoom(roomId, owner, roomServerId);
+				}
 
 			}catch (UnknownHostException e) {
 				System.out.println("Socket:"+e.getMessage());

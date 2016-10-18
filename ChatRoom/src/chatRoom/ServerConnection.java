@@ -137,6 +137,17 @@ public class ServerConnection extends Thread {
 
 						serverListMessage.put("servers", servers);
 
+						ArrayList<Map<String, Object>> rooms = new ArrayList<>();
+						for (chatRoomInfo roomInfo : Server.listOfrooms) {
+							Map<String, Object> info = new HashMap<>();
+							info.put("roomId", roomInfo.getchatRoomId());
+							info.put("owner", roomInfo.getOwner());
+							info.put("serverId", roomInfo.getserverId());
+							rooms.add(info);
+						}
+
+						serverListMessage.put("rooms", rooms);
+
 						writer.write(serverListMessage.toJSONString() + "\n");
 						writer.flush();
 					}

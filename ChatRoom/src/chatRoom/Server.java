@@ -127,11 +127,6 @@ public class Server {
 				if (server.getServerId().equals(currentServerId)){
 	    			serverPort = server.getClientsPort();
 	    			serverPort2 = server.getServersPort();
-					chatRoomInfo room = new chatRoomInfo();
-					room.chatRoomId ="MainHall-"+ server.getServerId();
-					room.owner = "";
-					room.serverId = server.getServerId();
-					listOfrooms.add(room);
 	    		}
 	        	
 	        }
@@ -185,6 +180,12 @@ public class Server {
 //				newSerChange(configFile);
 
 				if (!currentServerId.equals("AS")){
+					chatRoomInfo room = new chatRoomInfo();
+					room.chatRoomId ="MainHall-"+ currentServerId;
+					room.owner = "";
+					room.serverId = currentServerId;
+					listOfrooms.add(room);
+
 					MessageHandler.newServer(currentServerId);
 
 					// Create a server socket listening on port 443
@@ -265,14 +266,15 @@ public class Server {
 
 		ServerInfo serverInfo = new ServerInfo(serverId, address, cPort, sPort);
 		listOfservers.add(serverInfo);
+		System.out.println("Added server: " + serverId);
+	}
 
+	public static void addRoom(String roomId, String owner, String serverId) {
 		chatRoomInfo room = new chatRoomInfo();
-		room.chatRoomId ="MainHall-"+ serverId;
+		room.chatRoomId = roomId;
 		room.owner = "";
 		room.serverId = serverId;
 		listOfrooms.add(room);
-
-		System.out.println("Added server: " + serverId);
 	}
 	
 	public void newSerChange(String configFile){

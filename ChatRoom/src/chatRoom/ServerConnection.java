@@ -154,6 +154,15 @@ public class ServerConnection extends Thread {
 
 					Server.addServer(newServerId, newServerAdd, newCPort, newSPort);
 				}
+
+				if(s.equals("updateclient")){
+					if (currentServerId.equals("AS")) {
+						String client = (String) msgJObj.get("identity");
+						String serverId = (String) msgJObj.get("serverid");
+						String username = (String) msgJObj.get("username");
+						Server.updateClient(client, username, serverId);
+					}
+				}
 				
 				if(s.equals("lockidentity")){	
 					userIdentity= (String) msgJObj.get("identity");
@@ -324,8 +333,6 @@ public class ServerConnection extends Thread {
 		String authApproval = "false";
 		String EnPassword =null;
 		for(LoginInfo login : Server.listOfAuthUsers){
-			System.out.println("this is the username " +login.loginUsername);
-			System.out.println("this is the password " +login.loginPassword);
 			if(!(login.loginUsername.equals(username)))
 				continue;
 			try {
@@ -338,8 +345,6 @@ public class ServerConnection extends Thread {
 			if(login.loginUsername.equals(username)&&EnPassword.equals(password)&&!(login.loggedin)){
 				authApproval = "true";
 				login.loggedin=true;
-				System.out.println(login.loginUsername);
-				System.out.println(login.loginPassword);
 				break;
 			}
 			

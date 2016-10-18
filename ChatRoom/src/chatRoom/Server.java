@@ -9,9 +9,7 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class Server {
 	static BufferedReader br = null;
@@ -21,6 +19,8 @@ public class Server {
 	static List<chatRoomInfo> listOfrooms;
 	static List<chatRoomInfo> listOfLockedRooms;
 	static List<LoginInfo> listOfAuthUsers;
+
+	static Map<String, ClientServerInfo> clientServerIdMap;
 
 	static String currentServerId;
 	
@@ -34,7 +34,7 @@ public class Server {
 		listOfusers = new ArrayList<UserInfo>();
 		listOfrooms = new ArrayList<chatRoomInfo>();
 		listOfLockedRooms = new ArrayList<chatRoomInfo>();
-		
+		clientServerIdMap = new HashMap<>();
 	}
 
 	
@@ -141,7 +141,6 @@ public class Server {
 					while ((line = br.readLine()) != null)
 					{   
 						String [] tokens = line.split("\\n");
-						String encryptedPassword = null;
 						for (int i=0 ; i< tokens.length ; i++){
 							
 							String [] newTokens = line.split("\\t");
@@ -150,17 +149,7 @@ public class Server {
 							LoginInfo login = new LoginInfo();
 						
 							login.loginUsername = newTokens[0];
-							try {
-								encryptedPassword = EnDecryption.encrypt(newTokens[1]);
-								String EnPassword = EnDecryption.decrypt(encryptedPassword);
-								System.out.println("decrypt: " + EnPassword);
-							} catch (Exception e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-							login.loginPassword= encryptedPassword;
-							System.out.println(encryptedPassword);
-							//login.loginPassword = newTokens[1];
+							login.loginPassword= newTokens[1];
 							listOfAuthUsers.add(login);
 						}
 					
@@ -268,6 +257,24 @@ public class Server {
 				roomIterator.remove();
 			}
 		}
+
+		if (currentServerId.equals("AS")) {
+			List<String> clientToRemove = new ArrayList<>();
+			for (Map.Entry<String, ClientServerInfo> clientServer : clientServerIdMap.entrySet()) {
+				ClientServerInfo clientServerInfo = clientServer.getValue();
+				if (clientServerInfo.getServerid().equals(serverId)) {
+					for(LoginInfo login :Server.listOfAuthUsers){
+						if(login.loginUsername.equals(clientServerInfo.getUsername())){
+							login.loggedin = false;
+						}
+					}
+					clientToRemove.add(clientServer.getKey());
+				}
+			}
+			for (String clientIdentity : clientToRemove) {
+				clientServerIdMap.remove(clientIdentity);
+			}
+		}
 	}
 
 	public static void addServer(String serverId, String address, int cPort, int sPort) {
@@ -278,6 +285,14 @@ public class Server {
 		ServerInfo serverInfo = new ServerInfo(serverId, address, cPort, sPort);
 		listOfservers.add(serverInfo);
 		System.out.println("Added server: " + serverId);
+
+		if (currentServerId.equals("AS")) return;
+
+		chatRoomInfo room = new chatRoomInfo();
+		room.chatRoomId = "MainHall-"+ serverId;;
+		room.owner = "";
+		room.serverId = serverId;
+		listOfrooms.add(room);
 	}
 
 	public static void addRoom(String roomId, String owner, String serverId) {
@@ -286,6 +301,10 @@ public class Server {
 		room.owner = "";
 		room.serverId = serverId;
 		listOfrooms.add(room);
+	}
+
+	public static void updateClient(String identity, String username, String serverId) {
+		clientServerIdMap.put(identity, new ClientServerInfo(username, serverId));
 	}
 	
 	public void newSerChange(String configFile){

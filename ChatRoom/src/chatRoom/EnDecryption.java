@@ -20,10 +20,8 @@ public class EnDecryption
         Cipher cipher = Cipher.getInstance(EnDecryption.ALGORITHM);
         cipher.init(Cipher.ENCRYPT_MODE, key);
         byte [] encryptedByteValue = cipher.doFinal(value.getBytes("UTF-8"));
-        System.out.println("encryptee byte: " + encryptedByteValue);
         String encryptedValue64 = Base64.getEncoder().encodeToString(encryptedByteValue);
         return encryptedValue64;
-               
     }
     
     public static String decrypt(String value) throws Exception
@@ -31,13 +29,10 @@ public class EnDecryption
         Key key = generateKey();
         Cipher cipher = Cipher.getInstance(EnDecryption.ALGORITHM);
         cipher.init(Cipher.DECRYPT_MODE, key);
-        System.out.println("this is the value " + value);
         byte [] decryptedValue64 = Base64.getDecoder().decode(value);
         byte [] decryptedByteValue = cipher.doFinal(decryptedValue64);
         String decryptedValue = new String(decryptedByteValue,"UTF-8");
-        System.out.println(decryptedValue);
         return decryptedValue;
-                
     }
     
     private static Key generateKey() throws Exception 

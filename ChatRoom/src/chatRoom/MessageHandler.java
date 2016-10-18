@@ -184,7 +184,7 @@ public class MessageHandler {
 			 deleteRoomServers.put("roomid", roomId);
 			 
 			 for(ServerInfo server : Server.listOfservers){
-					if (!(server.getServerId().equals(serverId))&&!(server.getServerId().equals("AS"))){
+					if (!(server.getServerId().equals(serverId))){
 						
 						String hostName = server.getServerAddress();
 						int serverPort = server.getServersPort();
@@ -287,7 +287,7 @@ public class MessageHandler {
 			releaseRoom.put("approved", approval);
 			
 			for(ServerInfo server : Server.listOfservers){
-				if (!(server.getServerId().equals(currentServerId))&&!(server.getServerId().equals("AS"))){
+				if (!(server.getServerId().equals(currentServerId))){
 					
 					String hostName = server.getServerAddress();
 					int serverPort = server.getServersPort();
@@ -311,6 +311,42 @@ public class MessageHandler {
 				}
 			}
 	 }
+
+	static void updateClient(String identity, String username, String serverId) {
+		SSLSocket sslsocket = null;
+		JSONObject updateClientMessage = new JSONObject();
+
+
+		updateClientMessage.put("type", "updateclient");
+		updateClientMessage.put("serverid", serverId);
+		updateClientMessage.put("identity", identity);
+		updateClientMessage.put("username", username);
+
+		for(ServerInfo server : Server.listOfservers){
+			if (server.getServerId().equals("AS")){
+
+				String hostName = server.getServerAddress();
+				int serverPort = server.getServersPort();
+
+				try{
+					SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+					sslsocket = (SSLSocket) sslsocketfactory.createSocket(hostName, serverPort);
+
+					DataOutputStream out =new DataOutputStream(sslsocket.getOutputStream());
+//					System.out.println("Sending data");
+
+					out.write((updateClientMessage.toJSONString() + "\n").getBytes("UTF-8"));
+					out.flush();
+				}catch (UnknownHostException e) {
+					System.out.println("Socket:"+e.getMessage());
+				}catch (EOFException e){
+					System.out.println("EOF:"+e.getMessage());
+				}catch (IOException e){
+					System.out.println("readline:"+e.getMessage());
+				}
+			}
+		}
+	}
 	 
 	 static void releaseIdentity (String id ,String currentServerId){
 		SSLSocket sslsocket = null;

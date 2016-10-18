@@ -137,15 +137,13 @@ public class  ClientConnection extends Thread {
 							username.username = identity;
 							username.chatroom = chatRoom;
 							Server.listOfusers.add(username);
+
+							MessageHandler.updateClient(identity, loginUsername, currentServerId);
 				    		
 						
 						}else{
-							
-						
-							
 							removeAuthUser(this.username);
-							 
-							System.out.println("i'm inside");
+
 							ServerState.getInstance().DisconnectClient(this);
 							break;
 						}
@@ -278,6 +276,8 @@ public class  ClientConnection extends Thread {
 			    		msg = new Message (false,moveJoin);
 			    		String chatRoom = null;
 			    		messageQueue.add(msg);
+
+						MessageHandler.updateClient(identity, loginUsername, currentServerId);
 			    		
 			    		
 			    		for(UserInfo user : Server.listOfusers){

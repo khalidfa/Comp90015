@@ -264,9 +264,20 @@ public class ServerConnection extends Thread {
 	public synchronized JSONObject  login (String username,String password){
 		JSONObject AuthUser = new JSONObject();
 		String authApproval = "false";
-		
+		String EnPassword =null;
 		for(LoginInfo login : Server.listOfAuthUsers){
-			if(login.loginUsername.equals(username) && login.loginPassword.equals(password)&&!(login.loggedin)){
+			System.out.println("this is the username " +login.loginUsername);
+			System.out.println("this is the password " +login.loginPassword);
+			if(!(login.loginUsername.equals(username)))
+				continue;
+			try {
+				EnPassword = EnDecryption.decrypt(login.loginPassword);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			//if(login.loginUsername.equals(username) && login.loginPassword.equals(password)&&!(login.loggedin)){
+			if(login.loginUsername.equals(username)&&EnPassword.equals(password)&&!(login.loggedin)){
 				authApproval = "true";
 				login.loggedin=true;
 				System.out.println(login.loginUsername);

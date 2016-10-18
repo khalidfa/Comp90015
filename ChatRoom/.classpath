@@ -6,5 +6,11 @@
 	<classpathentry exported="true" kind="lib" path="/Users/Khalid/Downloads/json-simple-1.1.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="/Users/Khalid/Downloads/args4j-2.33.jar"/>
 	<classpathentry exported="true" kind="lib" path="/Users/Khalid/Downloads/gson-2.2.2.jar"/>
+	<classpathentry kind="lib" path="/Users/Khalid/Desktop/sun.misc.BASE64Decoder.jar"/>
+	<classpathentry kind="lib" path="/Users/Khalid/Desktop/Comp90015-master/ChatRoom/lib/commons-codec-1.10-javadoc.jar"/>
+	<classpathentry kind="lib" path="/Users/Khalid/Desktop/Comp90015-master/ChatRoom/lib/commons-codec-1.10-sources.jar"/>
+	<classpathentry kind="lib" path="/Users/Khalid/Desktop/Comp90015-master/ChatRoom/lib/commons-codec-1.10-test-sources.jar"/>
+	<classpathentry kind="lib" path="/Users/Khalid/Desktop/Comp90015-master/ChatRoom/lib/commons-codec-1.10-tests.jar"/>
+	<classpathentry kind="lib" path="/Users/Khalid/Desktop/Comp90015-master/ChatRoom/lib/commons-codec-1.10.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

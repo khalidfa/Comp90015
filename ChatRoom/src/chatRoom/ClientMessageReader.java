@@ -25,8 +25,8 @@ public class ClientMessageReader extends Thread {
 	public void run() {
 		try {
 			
-			System.out.println(Thread.currentThread().getName() 
-					+ " - Reading messages from client connection");
+//			System.out.println(Thread.currentThread().getName()
+//					+ " - Reading messages from client connection");
 			
 			
 			
@@ -36,11 +36,11 @@ public class ClientMessageReader extends Thread {
 				String line = reader.readLine();
 				if(line!=null){
 					clientMsg = (JSONObject) this.parser.parse(line);
-					System.out.println(Thread.currentThread().getName() 
-							+ " - Message from client received: " + clientMsg);
+//					System.out.println(Thread.currentThread().getName()
+//							+ " - Message from client received: " + clientMsg);
 					//place the message in the queue for the client connection thread to process
 					Message msg = new Message(true, clientMsg);
-					System.out.println("Message: " + msg.getMessage());
+//					System.out.println("Message: " + msg.getMessage());
 					messageQueue.add(msg);
 				}else{
 					
@@ -67,7 +67,7 @@ public class ClientMessageReader extends Thread {
 			Message exit = new Message(true, exitMessage);
 			messageQueue.add(exit);		
 		} catch (Exception e) {
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 	}
 }

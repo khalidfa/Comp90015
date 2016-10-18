@@ -131,6 +131,6 @@ public class MessageSendThread implements Runnable {
 			out.close();
 			out = temp_out;
 		}
-		SSLSocket = temp_socket;
+		sslsocket = temp_socket;
 	}
 }

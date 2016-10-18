@@ -1,32 +1,17 @@
 package chatRoom;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSocket;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 public class Server {
 	static BufferedReader br = null;
@@ -58,12 +43,12 @@ public class Server {
 	public static void main(String[] arstring) throws Exception {
 	    String configFile= null;
 		
-		System.setProperty("javax.net.ssl.keyStore","C:/UniMelb/dsassignment2/SSLDemo/chatroom.jks");		
+		System.setProperty("javax.net.ssl.keyStore","chatroom.jks");
 		System.setProperty("javax.net.ssl.keyStorePassword","chatroom");
-		System.setProperty("javax.net.ssl.trustStore","C:/UniMelb/dsassignment2/SSLDemo/servertrust.jks");
+		System.setProperty("javax.net.ssl.trustStore","servertrust.jks");
 		System.setProperty("javax.net.ssl.trustStorePassword","chatroom");		
 		// Enable debugging to view the handshake and communication which happens between the SSLClient and the SSLServer
-		System.setProperty("javax.net.debug","all");
+//		System.setProperty("javax.net.debug","all");
 		
 		System.out.println("reading command line options");
 		
@@ -161,12 +146,12 @@ public class Server {
 						for (int i=0 ; i< tokens.length ; i++){
 							
 							String [] newTokens = line.split("\\t");
-							System.out.println(newTokens[0]);
-							System.out.println(newTokens[1]);
-								 LoginInfo login = new LoginInfo();
-								 login.loginUsername = newTokens[0];
-								 login.loginPassword = newTokens[1];
-								 listOfAuthUsers.add(login);
+//							System.out.println(newTokens[0]);
+//							System.out.println(newTokens[1]);
+							LoginInfo login = new LoginInfo();
+							login.loginUsername = newTokens[0];
+							login.loginPassword = newTokens[1];
+							listOfAuthUsers.add(login);
 						}
 					
 					}
@@ -186,7 +171,7 @@ public class Server {
 			
 				SSLServerSocket ssllisteningServerSocket = (SSLServerSocket) sslserversocketfactory.createServerSocket(serverPort2);
 				System.out.println("Server is listenting on port " + serverPort2);
-				ServerConnection serverConnection = new ServerConnection(listeningServerSocket, currentServerId);
+				ServerConnection serverConnection = new ServerConnection(ssllisteningServerSocket, currentServerId);
 
 				ServerHeartbeatSensor serverHeartbeatSensor = new ServerHeartbeatSensor(this);
 				
@@ -208,7 +193,7 @@ public class Server {
 					//Listen for incoming connections for ever
 					while (true) {
 						//Accept an incoming client connection request
-						SSLSocket clientSocket = (SSLSocket) ssllisteningSocket.accept();	
+						SSLSocket clientSocket = (SSLSocket) ssllisteningSocket.accept();
 						System.out.println(Thread.currentThread().getName() 
 								+ " - Client conection accepted");
 						
@@ -253,7 +238,7 @@ public class Server {
 				String chatRoomId = roomInfo.chatRoomId;
 				ArrayList<ClientConnection> connectedClients = new ArrayList<>(ServerState.getInstance().getConnectedClients());
 				for (ClientConnection client : connectedClients){
-					if (client.chatRoom.equals(chatRoomId)){
+					if (client.chatRoom != null && client.chatRoom.equals(chatRoomId)){
 						ServerState.getInstance().clientDisconnected(client);
 					}
 				}

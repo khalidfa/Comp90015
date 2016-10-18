@@ -40,7 +40,7 @@ public class MessageReceiveThread implements Runnable {
 
 		try {
 			this.in = new BufferedReader(new InputStreamReader(
-					socket.getInputStream(), "UTF-8"));
+					sslsocket.getInputStream(), "UTF-8"));
 			JSONObject message;
 			while (run) {
 				message = (JSONObject) parser.parse(in.readLine());

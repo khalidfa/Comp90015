@@ -21,8 +21,6 @@ public class ServerHeartbeatSensor extends Thread {
     public  ServerHeartbeatSensor(Server server){
         this.server = server;
         try {
-            //Wait 5 seconds before checking other servers status.
-            Thread.sleep(60000);
             this.start();
         } catch(Exception e) {
             Thread.currentThread().interrupt();
@@ -30,6 +28,13 @@ public class ServerHeartbeatSensor extends Thread {
     }
 
     public void run() {
+        //Wait 5 seconds before checking other servers status.
+        try {
+            Thread.sleep(5000);
+        } catch(InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
+
         while (true) {
             JSONObject heartbeatMessage = new JSONObject();
             heartbeatMessage.put("type", "heartbeat");
@@ -55,7 +60,7 @@ public class ServerHeartbeatSensor extends Thread {
                         out.write((heartbeatMessage.toJSONString() + "\n").getBytes("UTF-8"));
                         out.flush();
 
-                        socket.setSoTimeout(10000);
+                        SSLsocket.setSoTimeout(5000);
                         JSONObject message;
                         message = (JSONObject) parser.parse(in.readLine());
 
@@ -69,21 +74,15 @@ public class ServerHeartbeatSensor extends Thread {
                         // Server failed
                         server.deleteServer(serverId);
                     } finally {
-                        if (socket != null) {
+                        if (SSLsocket != null) {
                             try {
-                                socket.close();
+                                SSLsocket.close();
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
                         }
                     }
                 }
-            }
-
-            try {
-                Thread.sleep(50000);
-            } catch(InterruptedException ex) {
-                Thread.currentThread().interrupt();
             }
         }
     }

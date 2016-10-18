@@ -19,12 +19,12 @@ public class Client {
 
 	public static SSLSocket sslSocket;
 	public static void main(String[] args) throws IOException, ParseException {
-		System.setProperty("javax.net.ssl.trustStore","C:/UniMelb/dsassignment2/SSLDemo/clienttrust.jks");
+		System.setProperty("javax.net.ssl.trustStore","clienttrust.jks");
 		
 		System.setProperty("javax.net.ssl.trustStorePassword","client");
 		
 		// Enable debugging to view the handshake and communication which happens between the SSLClient and the SSLServer
-		System.setProperty("javax.net.debug","all");
+//		System.setProperty("javax.net.debug","all");
 		
 		SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
 		String identity = null;

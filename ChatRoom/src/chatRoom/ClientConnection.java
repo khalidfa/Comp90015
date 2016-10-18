@@ -21,6 +21,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+
 public class  ClientConnection extends Thread {
 
 	private SSLSocket SSLclientsocket;
@@ -56,8 +59,8 @@ public class  ClientConnection extends Thread {
 			messageReader.setName(this.getName() + "Reader");
 			messageReader.start();
 			
-			System.out.println(Thread.currentThread().getName() 
-					+ " - Processing client " + currentServerId + "  messages");
+//			System.out.println(Thread.currentThread().getName()
+//					+ " - Processing client " + currentServerId + "  messages");
 			
 			
 			//Monitor the queue to process any incoming messages (consumer)
@@ -88,7 +91,8 @@ public class  ClientConnection extends Thread {
 						
 						JSONObject authenticated =MessageHandler.login(username,password);
 						String auth =(String) authenticated.get("authenticated");
-						if(auth.equals("false")){
+
+						if(auth != null && auth.equals("false")){
 							authentication = false;
 						}
 						
@@ -96,9 +100,7 @@ public class  ClientConnection extends Thread {
 						messageQueue.add(msgAuthApproval);
 						if(!authentication){
 							ServerState.getInstance().DisconnectClient(this);
-								
 						}else{
-							
 							loginUsername = username;
 						}
 					}
@@ -153,9 +155,10 @@ public class  ClientConnection extends Thread {
 			    		JSONObject createroom = MessageHandler.createRoom(this.identity , tempChatRoom,currentServerId);
 			    		Message msgCreateRoom = new Message (false,createroom);
 			    		messageQueue.add(msgCreateRoom);
-			    		String approval = (String) createroom.get("approved");
-			    		
-			    		if(((String)createroom.get("approved")).equals("true")){
+			    		String approval = String.valueOf(createroom.get("approved"));
+						Boolean approved = Boolean.valueOf(approval);
+
+						if (approved) {
 			    			
 			    			chatRoom = tempChatRoom;
 			    			chatRoomInfo room = new chatRoomInfo();
@@ -420,13 +423,13 @@ public class  ClientConnection extends Thread {
 			//ServerState.getInstance().clientDisconnected(this);
 			
 			
-			System.out.println(Thread.currentThread().getName() 
-					+ " - Client " +" disconnected");
+//			System.out.println(Thread.currentThread().getName()
+//					+ " - Client " +" disconnected");
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}finally {
-			if(clientSocket != null) {
+			if(SSLclientsocket != null) {
 				try {
 					reader.close();
 					writer.close();
@@ -465,7 +468,7 @@ public class  ClientConnection extends Thread {
 						s = (SSLSocket) sslsocketfactory.createSocket(hostName, serverPort);
 						DataOutputStream out =new DataOutputStream( s.getOutputStream());
 						
-						System.out.println("Sending data");
+//						System.out.println("Sending data");
 						out.write((releaseLoginUsername.toJSONString() + "\n").getBytes("UTF-8"));
 						out.flush();
 						 
@@ -485,9 +488,9 @@ public class  ClientConnection extends Thread {
 		try {
 			writer.write(msg);
 			writer.flush();
-			System.out.println(Thread.currentThread().getName() + " - Message sent to client " );
+//			System.out.println(Thread.currentThread().getName() + " - Message sent to client " );
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.out.println(identity + " has closed the connection.");
 		}
 	}
 }

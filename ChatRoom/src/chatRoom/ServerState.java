@@ -36,11 +36,11 @@ public class ServerState {
 		    if(str.equals(client))
 		        iter.remove();
 		}
-		if(connectedClients.isEmpty()){
-			System.out.println("inside ServerState is empty");
-		}else{
-			System.out.println("inside ServerState is not empty");
-		}
+//		if(connectedClients.isEmpty()){
+//			System.out.println("inside ServerState is empty");
+//		}else{
+//			System.out.println("inside ServerState is not empty");
+//		}
 	}
 	public synchronized void clientDisconnected(ClientConnection client) {
 		connectedClients.add(client);

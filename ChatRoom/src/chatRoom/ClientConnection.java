@@ -137,13 +137,15 @@ public class  ClientConnection extends Thread {
 							username.username = identity;
 							username.chatroom = chatRoom;
 							Server.listOfusers.add(username);
-
-							MessageHandler.updateClient(identity, loginUsername, currentServerId);
 				    		
 						
 						}else{
+							
+						
+							
 							removeAuthUser(this.username);
-
+							 
+							System.out.println("i'm inside");
 							ServerState.getInstance().DisconnectClient(this);
 							break;
 						}
@@ -276,8 +278,6 @@ public class  ClientConnection extends Thread {
 			    		msg = new Message (false,moveJoin);
 			    		String chatRoom = null;
 			    		messageQueue.add(msg);
-
-						MessageHandler.updateClient(identity, loginUsername, currentServerId);
 			    		
 			    		
 			    		for(UserInfo user : Server.listOfusers){
@@ -391,10 +391,12 @@ public class  ClientConnection extends Thread {
 									
 									
 									msg =new Message(false,deleteRoom);
-							    	messageQueue.add(msg);
+									write(msg.getMessage().toJSONString()+"\n");
+									//messageQueue.add(msg);
 							    	JSONObject changeRoom = MessageHandler.changeRoomClass(this.identity,"","");
 							    	msg = new Message(false,changeRoom);
-							    	messageQueue.add(msg);
+							    	write(msg.getMessage().toJSONString()+"\n");
+							    	//messageQueue.add(msg);
 									ServerState.getInstance().DisconnectClient(this);
 		    			}else{
 		    				JSONObject changeRoom = MessageHandler.changeRoomClass(this.identity,"","");
